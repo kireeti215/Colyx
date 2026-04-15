@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colyx — College Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D1B3E;
+  --navy-mid: #1A2F5A;
+  --teal: #00C9A7;
+  --teal-dark: #009E84;
+  --teal-soft: #E6FAF7;
+  --white: #FFFFFF;
+  --cloud: #F7F8FA;
+  --gray: #64748B;
+  --gray-border: #E2E8F0;
+  --sidebar-w: 240px;
+  --header-h: 64px;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --success: #10B981;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--cloud); color:var(--navy); overflow-x:hidden; }
+
+/* ══ SIDEBAR ══ */
+.sidebar {
+  position:fixed; top:0; left:0; bottom:0;
+  width:var(--sidebar-w);
+  background:var(--navy);
+  display:flex; flex-direction:column;
+  z-index:100;
+  transition:transform 0.3s;
+}
+.sidebar-logo {
+  padding:20px 24px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  font-size:20px; font-weight:800; color:white;
+  letter-spacing:-0.5px;
+}
+.sidebar-logo span { color:var(--teal); }
+.sidebar-college {
+  padding:14px 24px;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+}
+.sc-name { font-size:12px; font-weight:700; color:white; line-height:1.4; }
+.sc-role { font-size:11px; color:rgba(255,255,255,0.4); margin-top:2px; font-family:'Inter',sans-serif; }
+.sc-badge {
+  display:inline-block;
+  background:rgba(0,201,167,0.15);
+  color:var(--teal);
+  font-size:10px; font-weight:700;
+  padding:2px 8px; border-radius:10px;
+  margin-top:4px;
+}
+
+.sidebar-nav { flex:1; overflow-y:auto; padding:12px 0; }
+.nav-section-label {
+  font-size:10px; font-weight:700;
+  color:rgba(255,255,255,0.25);
+  text-transform:uppercase; letter-spacing:1.5px;
+  padding:12px 24px 6px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 24px;
+  font-size:13px; font-weight:600;
+  color:rgba(255,255,255,0.55);
+  cursor:pointer;
+  transition:all 0.2s;
+  border-left:3px solid transparent;
+}
+.nav-item:hover { color:white; background:rgba(255,255,255,0.05); }
+.nav-item.active { color:white; background:rgba(0,201,167,0.1); border-left-color:var(--teal); }
+.nav-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.nav-badge {
+  margin-left:auto;
+  background:var(--teal);
+  color:var(--navy);
+  font-size:10px; font-weight:800;
+  padding:2px 7px; border-radius:10px;
+  min-width:20px; text-align:center;
+}
+.nav-badge.warning { background:var(--warning); color:white; }
+
+.sidebar-footer {
+  padding:16px 24px;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.logout-btn {
+  display:flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:600;
+  color:rgba(255,255,255,0.4);
+  cursor:pointer;
+  transition:color 0.2s;
+}
+.logout-btn:hover { color:white; }
+
+/* ══ MAIN ══ */
+.main {
+  margin-left:var(--sidebar-w);
+  min-height:100vh;
+  display:flex; flex-direction:column;
+}
+
+/* ══ HEADER ══ */
+.header {
+  position:sticky; top:0; z-index:50;
+  background:rgba(255,255,255,0.97);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--gray-border);
+  height:var(--header-h);
+  display:flex; align-items:center;
+  padding:0 32px;
+  justify-content:space-between;
+}
+.header-title { font-size:18px; font-weight:800; color:var(--navy); }
+.header-right { display:flex; align-items:center; gap:16px; }
+.header-notif {
+  width:38px; height:38px;
+  border-radius:50%;
+  background:var(--cloud);
+  border:1px solid var(--gray-border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; cursor:pointer;
+  position:relative; transition:all 0.2s;
+}
+.header-notif:hover { background:var(--teal-soft); border-color:var(--teal); }
+.notif-dot {
+  position:absolute; top:6px; right:6px;
+  width:8px; height:8px;
+  background:var(--teal); border-radius:50%;
+  border:2px solid white;
+}
+.header-avatar {
+  width:38px; height:38px;
+  border-radius:50%;
+  background:var(--navy);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:800; color:white;
+  cursor:pointer;
+}
+.mob-menu-btn { display:none; cursor:pointer; font-size:22px; }
+@media(max-width:768px) {
+
+  /* ══ MOBILE GRID FIX ══ */
+  .content [style*="grid-template-columns:1fr 1fr"],
+  .content [style*="grid-template-columns: 1fr 1fr"],
+  .content [style*="grid-template-columns:2fr 1fr"],
+  .content [style*="grid-template-columns: 2fr 1fr"],
+  .content [style*="grid-template-columns:1fr 2fr"],
+  .content [style*="grid-template-columns: 1fr 2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .pipeline-wrap { grid-template-columns: 1fr 1fr !important; }
+  .mentor-grid { grid-template-columns: 1fr !important; }
+  .inspired-card { min-width: 0; }
+  [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr 1fr !important; }
+  [style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }
+
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .mob-menu-btn { display:block; }
+  .header { padding:0 20px; }
+  .content { padding:20px 16px; }
+}
+
+/* ══ CONTENT ══ */
+.content { padding:28px 32px; flex:1; }
+
+/* ══ PAGES ══ */
+.page { display:none; }
+.page.active { display:block; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+/* ══ PAGE HEADER ══ */
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.page-title { font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-0.5px; }
+.page-sub { font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+/* ══ BUTTONS ══ */
+.btn { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; padding:9px 18px; border-radius:9px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; text-decoration:none; }
+.btn-navy { background:var(--navy); color:white; }
+.btn-navy:hover { background:var(--navy-mid); }
+.btn-teal { background:var(--teal); color:var(--navy); }
+.btn-teal:hover { background:var(--teal-dark); color:white; }
+.btn-outline { background:white; color:var(--navy); border:1.5px solid var(--gray-border); }
+.btn-outline:hover { border-color:var(--teal); color:var(--teal-dark); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+.btn-danger { background:#FEF2F2; color:var(--error); border:1px solid #FEE2E2; }
+.btn-danger:hover { background:var(--error); color:white; }
+
+/* ══ STATS GRID ══ */
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+@media(max-width:1024px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:480px) { .stats-grid { grid-template-columns:1fr 1fr; } }
+.stat-card {
+  background:white; border-radius:16px;
+  padding:20px; border-top:3px solid var(--teal);
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+  transition:transform 0.2s;
+}
+.stat-card:hover { transform:translateY(-2px); }
+.stat-icon { font-size:24px; margin-bottom:10px; }
+.stat-num { font-size:28px; font-weight:800; color:var(--navy); letter-spacing:-1px; line-height:1; }
+.stat-label { font-size:12px; color:var(--gray); margin-top:4px; font-family:'Inter',sans-serif; }
+.stat-change { font-size:11px; font-weight:600; margin-top:6px; }
+.stat-change.up { color:var(--success); }
+.stat-change.pending { color:var(--warning); }
+
+/* ══ CARD ══ */
+.card { background:white; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-bottom:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.card-title { font-size:15px; font-weight:700; color:var(--navy); }
+.card-sub { font-size:12px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+/* ══ TABLE ══ */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:2px solid var(--gray-border); white-space:nowrap; }
+td { font-size:13px; color:var(--navy); padding:12px 14px; border-bottom:1px solid var(--gray-border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--cloud); }
+.td-sub { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+/* ══ BADGE ══ */
+.badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+.badge-green { background:#DCFCE7; color:#166534; }
+.badge-yellow { background:#FEF9C3; color:#854D0E; }
+.badge-red { background:#FEE2E2; color:#991B1B; }
+.badge-blue { background:#DBEAFE; color:#1E40AF; }
+.badge-teal { background:var(--teal-soft); color:var(--teal-dark); }
+.badge-gray { background:var(--cloud); color:var(--gray); }
+
+/* ══ SEARCH BAR ══ */
+.search-bar {
+  display:flex; align-items:center; gap:10px;
+  background:var(--cloud); border:1.5px solid var(--gray-border);
+  border-radius:10px; padding:9px 14px;
+  transition:all 0.2s;
+}
+.search-bar:focus-within { border-color:var(--teal); background:white; }
+.search-bar input { border:none; background:none; outline:none; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); width:200px; }
+.search-bar input::placeholder { color:#B0BEC5; }
+
+/* ══ FILTER BAR ══ */
+.filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.filter-select { padding:8px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:white; outline:none; cursor:pointer; transition:all 0.2s; }
+.filter-select:focus { border-color:var(--teal); }
+
+/* ══ ACTIVITY FEED ══ */
+.activity-list { display:flex; flex-direction:column; gap:12px; }
+.activity-item { display:flex; align-items:flex-start; gap:12px; }
+.activity-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.activity-dot.teal { background:var(--teal-soft); }
+.activity-dot.blue { background:#DBEAFE; }
+.activity-dot.yellow { background:#FEF9C3; }
+.activity-content { flex:1; }
+.activity-text { font-size:13px; color:var(--navy); font-weight:500; line-height:1.5; }
+.activity-time { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+/* ══ QUICK ACTIONS ══ */
+.quick-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+@media(max-width:768px) { .quick-actions { grid-template-columns:repeat(2,1fr); } }
+.qa-btn {
+  background:white; border:1.5px solid var(--gray-border);
+  border-radius:14px; padding:16px;
+  text-align:center; cursor:pointer;
+  transition:all 0.2s; text-decoration:none;
+  display:block;
+}
+.qa-btn:hover { border-color:var(--teal); background:var(--teal-soft); transform:translateY(-2px); }
+.qa-icon { font-size:24px; margin-bottom:8px; }
+.qa-label { font-size:12px; font-weight:700; color:var(--navy); }
+
+/* ══ NOTIFICATION COMPOSER ══ */
+.notif-targets { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.notif-target {
+  display:flex; align-items:center; gap:6px;
+  padding:8px 16px; border-radius:10px;
+  border:1.5px solid var(--gray-border);
+  font-size:13px; font-weight:600;
+  cursor:pointer; transition:all 0.2s;
+  background:white;
+}
+.notif-target:hover { border-color:var(--teal); color:var(--teal-dark); }
+.notif-target.selected { background:var(--teal-soft); border-color:var(--teal); color:var(--teal-dark); }
+.notif-target .nt-icon { font-size:16px; }
+
+/* ══ PROGRESS BAR ══ */
+.progress-wrap { margin:8px 0; }
+.progress-label { display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px; }
+.progress-track { height:6px; background:var(--gray-border); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:var(--teal); border-radius:3px; transition:width 0.5s ease; }
+
+/* ══ FORM INLINE ══ */
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media(max-width:600px) { .form-row { grid-template-columns:1fr; } }
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; font-weight:700; color:var(--navy); margin-bottom:5px; display:block; }
+.form-input { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; transition:all 0.2s; }
+.form-input:focus { border-color:var(--teal); background:white; }
+.form-select { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; cursor:pointer; transition:all 0.2s; }
+.form-select:focus { border-color:var(--teal); background:white; }
+.form-textarea { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; transition:all 0.2s; resize:vertical; min-height:100px; }
+.form-textarea:focus { border-color:var(--teal); background:white; }
+
+/* ══ MODAL ══ */
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:white; border-radius:20px; padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; animation:fadeIn 0.25s ease; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title { font-size:18px; font-weight:800; color:var(--navy); }
+.modal-close { font-size:20px; cursor:pointer; color:var(--gray); transition:color 0.2s; line-height:1; }
+.modal-close:hover { color:var(--navy); }
+.modal-footer { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+/* ══ TOAST ══ */
+.toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:1000; transform:translateY(80px); opacity:0; transition:all 0.3s; box-shadow:0 4px 20px rgba(0,0,0,0.2); }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.teal { background:var(--teal); color:var(--navy); }
+
+/* ══ EMPTY STATE ══ */
+.empty-state { text-align:center; padding:48px 24px; }
+.empty-icon { font-size:48px; margin-bottom:14px; }
+.empty-title { font-size:16px; font-weight:700; color:var(--navy); margin-bottom:6px; }
+.empty-sub { font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; }
+
+/* ══ TABS ══ */
+.tab-bar { display:flex; gap:4px; background:var(--cloud); border-radius:12px; padding:4px; margin-bottom:20px; }
+.tab-btn { flex:1; padding:8px 12px; text-align:center; font-size:13px; font-weight:600; color:var(--gray); border-radius:9px; cursor:pointer; transition:all 0.2s; border:none; background:none; font-family:'Plus Jakarta Sans',sans-serif; }
+.tab-btn.active { background:white; color:var(--navy); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+
+/* ══ OVERLAY SIDEBAR (mobile) ══ */
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; }
+.sidebar-overlay.open { display:block; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">Col<span>yx</span></div>
+  <div class="sidebar-college">
+    <div class="sc-name">JNTU College of Engineering</div>
+    <div class="sc-role">Principal · Admin</div>
+    <div class="sc-badge">✓ Active Plan</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">🏠</span>Overview</div>
+    <div class="nav-item" onclick="showPage('notifications',this)"><span class="nav-icon">📢</span>Notifications<span class="nav-badge">3</span></div>
+
+    <div class="nav-section-label">Manage</div>
+    <div class="nav-item" onclick="showPage('students',this)"><span class="nav-icon">🎓</span>Students<span class="nav-badge warning">12</span></div>
+    <div class="nav-item" onclick="showPage('staff',this)"><span class="nav-icon">📚</span>Staff<span class="nav-badge warning">2</span></div>
+    <div class="nav-item" onclick="showPage('alumni',this)"><span class="nav-icon">🏆</span>Alumni<span class="nav-badge">5</span></div>
+
+    <div class="nav-section-label">College</div>
+    <div class="nav-item" onclick="showPage('placements',this)"><span class="nav-icon">💼</span>Placements</div>
+    <div class="nav-item" onclick="showPage('achievements',this)"><span class="nav-icon">🏅</span>Achievement Wall</div>
+    <div class="nav-item" onclick="showPage('events',this)"><span class="nav-icon">📅</span>Events</div>
+    <div class="nav-item" onclick="showPage('testimonials',this)"><span class="nav-icon">⭐</span>Testimonials</div>
+    <div class="nav-item" onclick="showPage('public-page',this)"><span class="nav-icon">🌐</span>Public Page</div>
+
+    <div class="nav-section-label">Account</div>
+    <div class="nav-item" onclick="showPage('billing',this)"><span class="nav-icon">💳</span>Billing</div>
+    <div class="nav-item" onclick="showPage('analytics',this)"><span class="nav-icon">📊</span>Analytics</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="logout-btn" onclick="window.location.href='colyx_login.html'">
+      <span>🚪</span> Logout
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="mob-menu-btn" onclick="openSidebar()">☰</div>
+      <div>
+        <div class="header-title" id="header-title">Overview</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-notif" onclick="showPage('notifications',null)">
+        🔔<div class="notif-dot"></div>
+      </div>
+      <div class="header-avatar">JP</div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ══════════════════════════════
+         PAGE: OVERVIEW
+    ══════════════════════════════ -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Principal! 👋</div>
+          <div class="page-sub">JNTU College of Engineering · Academic Year 2025-26</div>
+        </div>
+        <button class="btn btn-navy" onclick="showPage('notifications',null);openNotifComposer()">📢 Send Notification</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🎓</div>
+          <div class="stat-num">1,840</div>
+          <div class="stat-label">Total Students</div>
+          <div class="stat-change up">↑ 12 new this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📚</div>
+          <div class="stat-num">87</div>
+          <div class="stat-label">Teaching Staff</div>
+          <div class="stat-change pending">⏳ 2 pending approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏆</div>
+          <div class="stat-num">3,240</div>
+          <div class="stat-label">Alumni</div>
+          <div class="stat-change up">↑ 5 verified this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💼</div>
+          <div class="stat-num">89%</div>
+          <div class="stat-label">Placement Rate</div>
+          <div class="stat-change up">↑ 4% from last year</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <div class="qa-btn" onclick="showPage('students',null);openModal('modal-add-student')">
+          <div class="qa-icon">➕</div>
+          <div class="qa-label">Add Student</div>
+        </div>
+        <div class="qa-btn" onclick="showPage('staff',null);openModal('modal-add-staff')">
+          <div class="qa-icon">👨‍🏫</div>
+          <div class="qa-label">Add Staff</div>
+        </div>
+        <div class="qa-btn" onclick="showPage('notifications',null);openNotifComposer()">
+          <div class="qa-icon">📢</div>
+          <div class="qa-label">Send Notification</div>
+        </div>
+        <div class="qa-btn" onclick="showPage('students',null);showTab('tab-approvals')">
+          <div class="qa-icon">✅</div>
+          <div class="qa-label">Pending Approvals<br><span style="font-size:10px;color:var(--warning);">12 pending</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recent Activity</div></div>
+          </div>
+          <div class="activity-list">
+            <div class="activity-item"><div class="activity-dot teal">🎓</div><div class="activity-content"><div class="activity-text">Rahul Kumar registered as student (CSE-3rd Year)</div><div class="activity-time">2 hours ago · Pending approval</div></div></div>
+            <div class="activity-item"><div class="activity-dot blue">📚</div><div class="activity-content"><div class="activity-text">Prof. Srinivas joined EEE department</div><div class="activity-time">5 hours ago · Approved</div></div></div>
+            <div class="activity-item"><div class="activity-dot teal">🏆</div><div class="activity-content"><div class="activity-text">Alumni batch 2020-CSE converted (45 students)</div><div class="activity-time">Yesterday · HOD approved</div></div></div>
+            <div class="activity-item"><div class="activity-dot yellow">⭐</div><div class="activity-content"><div class="activity-text">New testimonial submitted by Priya M. (Alumni)</div><div class="activity-time">2 days ago</div></div></div>
+            <div class="activity-item"><div class="activity-dot blue">💼</div><div class="activity-content"><div class="activity-text">TCS placement data updated for 2024 batch</div><div class="activity-time">3 days ago</div></div></div>
+          </div>
+        </div>
+
+        <!-- Department Overview -->
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Department Overview</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>Computer Science (CSE)</span><span style="color:var(--teal-dark);">542 students</span></div><div class="progress-track"><div class="progress-fill" style="width:88%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>Electronics (ECE)</span><span style="color:var(--teal-dark);">420 students</span></div><div class="progress-track"><div class="progress-fill" style="width:72%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>Electrical (EEE)</span><span style="color:var(--teal-dark);">380 students</span></div><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>Mechanical (MECH)</span><span style="color:var(--teal-dark);">320 students</span></div><div class="progress-track"><div class="progress-fill" style="width:55%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:4px;"><span>Civil (CIVIL)</span><span style="color:var(--teal-dark);">178 students</span></div><div class="progress-track"><div class="progress-fill" style="width:30%"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: STUDENTS
+    ══════════════════════════════ -->
+    <div class="page" id="page-students">
+      <div class="page-header">
+        <div><div class="page-title">Student Management</div><div class="page-sub">1,840 total students · 12 pending approvals</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="showToast('Excel template downloading...')">⬇ Download Template</button>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Upload Excel file')">⬆ Bulk Upload</button>
+          <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-student')">+ Add Student</button>
+        </div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-all-students" onclick="switchStudentTab('all')">All Students</button>
+        <button class="tab-btn" id="tab-approvals" onclick="switchStudentTab('approvals')">Pending Approvals <span style="background:var(--warning);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">12</span></button>
+        <button class="tab-btn" id="tab-conversion" onclick="switchStudentTab('conversion')">Alumni Conversion</button>
+      </div>
+
+      <!-- All Students Tab -->
+      <div id="students-all">
+        <div class="filter-bar">
+          <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search by name or roll no..." oninput="filterTable(this,'students-table')"></div>
+          <select class="filter-select" onchange="filterTable(this,'students-table')">
+            <option>All Years</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
+          </select>
+          <select class="filter-select">
+            <option>All Branches</option><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option><option>CIVIL</option>
+          </select>
+          <select class="filter-select">
+            <option>All Status</option><option>Active</option><option>Pending</option>
+          </select>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="table-wrap">
+            <table id="students-table">
+              <thead><tr><th>Student</th><th>Roll No</th><th>Branch</th><th>Year</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:600;">Rahul Kumar</div><div class="td-sub">rahul.k@gmail.com</div></td><td>21B81A0501</td><td>CSE</td><td>3rd Year</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr><td><div style="font-weight:600;">Priya Sharma</div><div class="td-sub">priya.s@gmail.com</div></td><td>21B81A0245</td><td>ECE</td><td>3rd Year</td><td><span class="badge badge-green">Active</span></td><td>Jan 2024</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr><td><div style="font-weight:600;">Arun Reddy</div><div class="td-sub">arun.r@gmail.com</div></td><td>22B81A0312</td><td>CSE</td><td>2nd Year</td><td><span class="badge badge-green">Active</span></td><td>Aug 2024</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr><td><div style="font-weight:600;">Sneha Patel</div><div class="td-sub">sneha.p@gmail.com</div></td><td>23B81A0189</td><td>EEE</td><td>1st Year</td><td><span class="badge badge-yellow">Pending</span></td><td>Aug 2025</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr><td><div style="font-weight:600;">Kiran Naidu</div><div class="td-sub">kiran.n@gmail.com</div></td><td>20B81A0445</td><td>MECH</td><td>4th Year</td><td><span class="badge badge-green">Active</span></td><td>Aug 2022</td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approvals Tab -->
+      <div id="students-approvals" style="display:none;">
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="card-header" style="padding:16px 20px;">
+            <div><div class="card-title">Pending Student Approvals</div><div class="card-sub">12 students waiting for approval</div></div>
+            <button class="btn btn-teal btn-sm" onclick="showToast('All 12 students approved!','teal')">✓ Approve All</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Student</th><th>Roll No</th><th>Branch</th><th>Year</th><th>Registered</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:600;">Sneha Patel</div><div class="td-sub">+91 98765 43210</div></td><td>23B81A0189</td><td>EEE</td><td>1st Year</td><td>Today, 9:30 AM</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Sneha Patel approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                <tr><td><div style="font-weight:600;">Vikram Singh</div><div class="td-sub">+91 87654 32109</div></td><td>23B81A0256</td><td>CSE</td><td>1st Year</td><td>Today, 8:15 AM</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Vikram Singh approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                <tr><td><div style="font-weight:600;">Lakshmi Devi</div><div class="td-sub">+91 76543 21098</div></td><td>23B81A0312</td><td>MECH</td><td>1st Year</td><td>Yesterday</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Lakshmi Devi approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Alumni Conversion Tab -->
+      <div id="students-conversion" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Alumni Conversion — 2024 Batch</div><div class="card-sub">Final year students ready for conversion — Department wise approval</div></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:var(--cloud);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div><div style="font-size:14px;font-weight:700;">CSE Department — 2024 Batch</div><div class="td-sub">142 students · HOD: Dr. Ramesh Kumar</div></div>
+              <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-yellow">Pending HOD Approval</span><button class="btn btn-teal btn-sm" onclick="showToast('CSE batch 2024 converted to Alumni!','teal')">Convert to Alumni</button></div>
+            </div>
+            <div style="background:var(--cloud);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div><div style="font-size:14px;font-weight:700;">ECE Department — 2024 Batch</div><div class="td-sub">118 students · HOD: Dr. Sunitha Rao</div></div>
+              <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-green">HOD Approved</span><button class="btn btn-navy btn-sm" onclick="showToast('ECE batch 2024 converted!','teal')">✓ Convert Now</button></div>
+            </div>
+            <div style="background:var(--cloud);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div><div style="font-size:14px;font-weight:700;">EEE Department — 2024 Batch</div><div class="td-sub">96 students · HOD: Prof. Nagaraju</div></div>
+              <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-blue">In Review</span><button class="btn btn-outline btn-sm">Remind HOD</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: STAFF
+    ══════════════════════════════ -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <div><div class="page-title">Staff Management</div><div class="page-sub">87 active staff · 2 pending approvals</div></div>
+        <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-staff')">+ Add Staff</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab2(this,'staff-active','staff-tabs')">Active Staff</button>
+        <button class="tab-btn" onclick="switchTab2(this,'staff-pending','staff-tabs')">Pending <span style="background:var(--warning);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">2</span></button>
+        <button class="tab-btn" onclick="switchTab2(this,'staff-hod','staff-tabs')">HOD Assignment</button>
+      </div>
+      <div id="staff-tabs">
+        <div id="staff-active">
+          <div class="filter-bar">
+            <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search staff..."></div>
+            <select class="filter-select"><option>All Departments</option><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option></select>
+            <select class="filter-select"><option>All</option><option>Active</option><option>Ex-Faculty</option></select>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Staff</th><th>Department</th><th>Designation</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600;">Dr. Ramesh Kumar</div><div class="td-sub">ramesh.k@jntu.edu.in</div></td><td>CSE</td><td>Professor</td><td><span class="badge badge-teal">HOD</span></td><td><span class="badge badge-green">Active</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm">View</button><button class="btn btn-danger btn-sm" onclick="showToast('Staff removed from college')">Remove</button></div></td></tr>
+                  <tr><td><div style="font-weight:600;">Dr. Sunitha Rao</div><div class="td-sub">sunitha.r@jntu.edu.in</div></td><td>ECE</td><td>Associate Professor</td><td><span class="badge badge-teal">HOD</span></td><td><span class="badge badge-green">Active</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm">View</button><button class="btn btn-danger btn-sm" onclick="showToast('Staff removed from college')">Remove</button></div></td></tr>
+                  <tr><td><div style="font-weight:600;">Prof. Nagaraju</div><div class="td-sub">nagaraju@jntu.edu.in</div></td><td>EEE</td><td>Assistant Professor</td><td><span class="badge badge-gray">Faculty</span></td><td><span class="badge badge-green">Active</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm">View</button><button class="btn btn-teal btn-sm" onclick="showToast('Nagaraju assigned as EEE HOD','teal')">Assign HOD</button></div></td></tr>
+                  <tr><td><div style="font-weight:600;">Mrs. Kavitha</div><div class="td-sub">kavitha@gmail.com</div></td><td>CSE</td><td>Assistant Professor</td><td><span class="badge badge-gray">Faculty</span></td><td><span class="badge badge-blue">Ex-Faculty</span></td><td><div style="display:flex;gap:6px;"><button class="btn btn-outline btn-sm">View</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="staff-pending" style="display:none;">
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Staff</th><th>Department</th><th>Designation</th><th>Applied</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600;">Dr. Prasad Rao</div><div class="td-sub">prasad.r@gmail.com</div></td><td>MECH</td><td>Associate Professor</td><td>Today</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Dr. Prasad Rao approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                  <tr><td><div style="font-weight:600;">Ms. Divya Singh</div><div class="td-sub">divya.s@gmail.com</div></td><td>CSE</td><td>Assistant Professor</td><td>Yesterday</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Ms. Divya Singh approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="staff-hod" style="display:none;">
+          <div class="card">
+            <div class="card-header"><div class="card-title">HOD Assignment</div><div class="card-sub">Assign HODs — auto-scopes entire department access</div></div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center;background:var(--cloud);padding:14px;border-radius:12px;">
+                <div><div style="font-size:13px;font-weight:700;">CSE Department</div><div class="td-sub">142 students · 18 faculty</div></div>
+                <div><select class="form-select"><option>Dr. Ramesh Kumar (Current HOD)</option><option>Prof. Anil Sharma</option><option>Dr. Vijay Kumar</option></select></div>
+                <button class="btn btn-teal btn-sm" onclick="showToast('CSE HOD updated!','teal')">Update</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center;background:var(--cloud);padding:14px;border-radius:12px;">
+                <div><div style="font-size:13px;font-weight:700;">ECE Department</div><div class="td-sub">118 students · 15 faculty</div></div>
+                <div><select class="form-select"><option>Dr. Sunitha Rao (Current HOD)</option><option>Prof. Ravi Kumar</option></select></div>
+                <button class="btn btn-teal btn-sm" onclick="showToast('ECE HOD updated!','teal')">Update</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:center;background:var(--cloud);padding:14px;border-radius:12px;">
+                <div><div style="font-size:13px;font-weight:700;">EEE Department</div><div class="td-sub">96 students · 12 faculty</div></div>
+                <div><select class="form-select"><option>— Not Assigned —</option><option>Prof. Nagaraju</option><option>Dr. Srinivas</option></select></div>
+                <button class="btn btn-teal btn-sm" onclick="showToast('EEE HOD assigned!','teal')">Assign</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: ALUMNI
+    ══════════════════════════════ -->
+    <div class="page" id="page-alumni">
+      <div class="page-header">
+        <div><div class="page-title">Alumni Management</div><div class="page-sub">3,240 alumni · 5 pending verification</div></div>
+        <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-alumni')">+ Add Alumni</button>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab2(this,'alumni-all','alumni-tabs')">All Alumni</button>
+        <button class="tab-btn" onclick="switchTab2(this,'alumni-verify','alumni-tabs')">Pending Verification <span style="background:var(--warning);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">5</span></button>
+        <button class="tab-btn" onclick="switchTab2(this,'alumni-groups','alumni-tabs')">Groups</button>
+      </div>
+      <div id="alumni-tabs">
+        <div id="alumni-all">
+          <div class="filter-bar">
+            <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search alumni..."></div>
+            <select class="filter-select"><option>All Batches</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option></select>
+            <select class="filter-select"><option>All Branches</option><option>CSE</option><option>ECE</option><option>EEE</option></select>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Alumni</th><th>Batch</th><th>Branch</th><th>Company</th><th>Services</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600;">Rajesh Kumar</div><div class="td-sub">rajesh.k@gmail.com</div></td><td>2021</td><td>CSE</td><td>TCS · Senior Engineer</td><td><span class="badge badge-teal">3 completed</span></td><td><span class="badge badge-green">Verified</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Priya Mehta</div><div class="td-sub">priya.m@gmail.com</div></td><td>2020</td><td>ECE</td><td>Infosys · Tech Lead</td><td><span class="badge badge-teal">6 completed</span></td><td><span class="badge badge-green">Verified</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Arun Sharma</div><div class="td-sub">arun.s@gmail.com</div></td><td>2022</td><td>CSE</td><td>Amazon · SDE-2</td><td><span class="badge badge-gray">0</span></td><td><span class="badge badge-yellow">Pending</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Kavitha Reddy</div><div class="td-sub">kavi.r@gmail.com</div></td><td>2019</td><td>EEE</td><td>Wipro · Manager</td><td><span class="badge badge-teal">12 completed</span></td><td><span class="badge badge-green">Verified</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="alumni-verify" style="display:none;">
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Alumni</th><th>Batch</th><th>Branch</th><th>Registered</th><th>Actions</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600;">Suresh Babu</div><div class="td-sub">+91 98765 11111</div></td><td>2018</td><td>MECH</td><td>2 days ago</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Suresh Babu verified!','teal')">✓ Verify</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                  <tr><td><div style="font-weight:600;">Anitha Kumari</div><div class="td-sub">+91 87654 22222</div></td><td>2015</td><td>CSE</td><td>3 days ago</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Anitha Kumari verified!','teal')">✓ Verify</button><button class="btn btn-danger btn-sm">✗ Reject</button></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="alumni-groups" style="display:none;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div class="card"><div class="card-title" style="margin-bottom:12px;">By Passout Year</div><div style="display:flex;flex-direction:column;gap:8px;"><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">2024 Batch</span><span class="badge badge-teal">356 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">2023 Batch</span><span class="badge badge-teal">342 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">2022 Batch</span><span class="badge badge-teal">318 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">2021 Batch</span><span class="badge badge-teal">304 alumni</span></div></div></div>
+            <div class="card"><div class="card-title" style="margin-bottom:12px;">By Branch</div><div style="display:flex;flex-direction:column;gap:8px;"><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">CSE Alumni</span><span class="badge badge-teal">1,240 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">ECE Alumni</span><span class="badge badge-teal">980 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">EEE Alumni</span><span class="badge badge-teal">620 alumni</span></div><div style="display:flex;justify-content:space-between;padding:8px 12px;background:var(--cloud);border-radius:8px;font-size:13px;"><span style="font-weight:600;">MECH Alumni</span><span class="badge badge-teal">400 alumni</span></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: NOTIFICATIONS
+    ══════════════════════════════ -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <div><div class="page-title">Notifications</div><div class="page-sub">Send targeted notifications to your college network</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Composer -->
+        <div class="card" id="notif-composer">
+          <div class="card-title" style="margin-bottom:16px;">Send Notification</div>
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:8px;">Send To:</div>
+          <div class="notif-targets">
+            <div class="notif-target selected" onclick="toggleTarget(this)"><span class="nt-icon">🌐</span>Everyone</div>
+            <div class="notif-target" onclick="toggleTarget(this)"><span class="nt-icon">🎓</span>Students</div>
+            <div class="notif-target" onclick="toggleTarget(this)"><span class="nt-icon">📚</span>Teachers</div>
+            <div class="notif-target" onclick="toggleTarget(this)"><span class="nt-icon">🏆</span>Alumni</div>
+            <div class="notif-target" onclick="toggleTarget(this)"><span class="nt-icon">🏛️</span>By Dept</div>
+            <div class="notif-target" onclick="toggleTarget(this)"><span class="nt-icon">📅</span>By Batch</div>
+          </div>
+          <div class="form-group" style="margin-top:12px;">
+            <label class="form-label">Notification Title *</label>
+            <input class="form-input" type="text" placeholder="e.g. Campus Recruitment Drive" id="notif-title">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message *</label>
+            <textarea class="form-textarea" placeholder="Type your notification message here..." id="notif-msg"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Schedule <span style="color:var(--gray);font-weight:400;">(optional — leave blank to send now)</span></label>
+            <input class="form-input" type="datetime-local" id="notif-schedule">
+          </div>
+          <button class="btn btn-navy" style="width:100%;" onclick="sendNotification()">📢 Send Notification</button>
+        </div>
+        <!-- Sent History -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Recent Notifications</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:700;">Campus Recruitment — TCS</span><span class="badge badge-teal">Everyone</span></div>
+              <div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">TCS is visiting campus on 25th April. All 3rd and 4th year students must register by 20th April.</div>
+              <div style="font-size:11px;color:var(--gray);margin-top:6px;">Sent 2 days ago · 1,840 recipients · 94% read</div>
+            </div>
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:700;">Alumni Meet 2025</span><span class="badge badge-blue">Alumni</span></div>
+              <div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Annual alumni meet scheduled for May 15th. Register before April 30th to confirm your seat.</div>
+              <div style="font-size:11px;color:var(--gray);margin-top:6px;">Sent 5 days ago · 3,240 recipients · 78% read</div>
+            </div>
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:700;">Exam Schedule Update</span><span class="badge badge-green">Students</span></div>
+              <div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Mid-semester exams rescheduled to April 28th. Check the updated timetable on the noticeboard.</div>
+              <div style="font-size:11px;color:var(--gray);margin-top:6px;">Sent 1 week ago · 1,840 recipients · 99% read</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: PLACEMENTS
+    ══════════════════════════════ -->
+    <div class="page" id="page-placements">
+      <div class="page-header">
+        <div><div class="page-title">Placement Details</div><div class="page-sub">Track and update placement data</div></div>
+        <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-placement')">+ Add Placement</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-num">89%</div><div class="stat-label">Placement Rate 2024</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num">₹6.4L</div><div class="stat-label">Average Package</div></div>
+        <div class="stat-card"><div class="stat-icon">🚀</div><div class="stat-num">₹24L</div><div class="stat-label">Highest Package</div></div>
+        <div class="stat-card"><div class="stat-icon">🏭</div><div class="stat-num">48</div><div class="stat-label">Companies Visited</div></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="card-header" style="padding:16px 20px;"><div class="card-title">Company-wise Placements — 2024 Batch</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Company</th><th>Students Placed</th><th>Package (LPA)</th><th>Branch</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:600;">TCS</td><td>124</td><td>₹3.6 – ₹7.2</td><td>All</td><td>Jan 2024</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td style="font-weight:600;">Infosys</td><td>98</td><td>₹4.2 – ₹8.5</td><td>CSE, ECE</td><td>Feb 2024</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td style="font-weight:600;">Wipro</td><td>76</td><td>₹3.8 – ₹6.5</td><td>All</td><td>Feb 2024</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td style="font-weight:600;">Amazon</td><td>12</td><td>₹18 – ₹24</td><td>CSE</td><td>Dec 2023</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+              <tr><td style="font-weight:600;">L&T</td><td>45</td><td>₹4.5 – ₹8.0</td><td>EEE, MECH, CIVIL</td><td>Mar 2024</td><td><button class="btn btn-outline btn-sm">Edit</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: ACHIEVEMENTS
+    ══════════════════════════════ -->
+    <div class="page" id="page-achievements">
+      <div class="page-header">
+        <div><div class="page-title">Achievement Wall</div><div class="page-sub">Showcase your college's accreditations and rankings</div></div>
+        <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-achievement')">+ Add Achievement</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div class="card" style="text-align:center;border-top:3px solid var(--teal);">
+          <div style="font-size:40px;margin-bottom:10px;">🏅</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">NAAC A+</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">National Assessment and Accreditation Council</div>
+          <div style="font-size:11px;color:var(--teal-dark);margin-top:8px;font-weight:600;">Valid until 2027</div>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--teal);">
+          <div style="font-size:40px;margin-bottom:10px;">🏆</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">NIRF Rank #124</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">National Institutional Ranking Framework 2024</div>
+          <div style="font-size:11px;color:var(--teal-dark);margin-top:8px;font-weight:600;">Engineering Category</div>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--teal);">
+          <div style="font-size:40px;margin-bottom:10px;">⭐</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">NBA Accredited</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">CSE, ECE, EEE departments accredited</div>
+          <div style="font-size:11px;color:var(--teal-dark);margin-top:8px;font-weight:600;">Valid until 2026</div>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--teal);">
+          <div style="font-size:40px;margin-bottom:10px;">🎖️</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">Best College 2023</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">Times Engineering Survey — Telangana Region</div>
+          <div style="font-size:11px;color:var(--teal-dark);margin-top:8px;font-weight:600;">Regional Award</div>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px solid var(--teal);">
+          <div style="font-size:40px;margin-bottom:10px;">🔬</div>
+          <div style="font-size:18px;font-weight:800;color:var(--navy);">Research Grant</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">DST-SERB ₹45L Research Grant 2024</div>
+          <div style="font-size:11px;color:var(--teal-dark);margin-top:8px;font-weight:600;">3 Year Project</div>
+        </div>
+        <div class="card" style="text-align:center;border-top:3px dashed var(--gray-border);cursor:pointer;" onclick="openModal('modal-add-achievement')">
+          <div style="font-size:40px;margin-bottom:10px;">➕</div>
+          <div style="font-size:16px;font-weight:700;color:var(--gray);">Add Achievement</div>
+          <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">Rankings, awards, accreditations</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: EVENTS
+    ══════════════════════════════ -->
+    <div class="page" id="page-events">
+      <div class="page-header">
+        <div><div class="page-title">Events</div><div class="page-sub">Manage college events and send notifications</div></div>
+        <button class="btn btn-navy btn-sm" onclick="openModal('modal-add-event')">+ Create Event</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <div style="background:var(--navy);color:white;border-radius:12px;padding:12px 16px;text-align:center;min-width:60px;flex-shrink:0;"><div style="font-size:20px;font-weight:800;line-height:1;">25</div><div style="font-size:11px;opacity:0.6;">APR</div></div>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:700;">TCS Campus Recruitment Drive</div>
+            <div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">9:00 AM · Main Auditorium · Open to 3rd & 4th Year Students</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-green">Upcoming</span><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-teal btn-sm" onclick="showToast('Notification sent to 3rd & 4th year students!','teal')">Notify</button></div>
+        </div>
+        <div class="card" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+          <div style="background:var(--teal);color:var(--navy);border-radius:12px;padding:12px 16px;text-align:center;min-width:60px;flex-shrink:0;"><div style="font-size:20px;font-weight:800;line-height:1;">15</div><div style="font-size:11px;opacity:0.6;">MAY</div></div>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:700;">Annual Alumni Meet 2025</div>
+            <div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">10:00 AM · College Grounds · Open to All Alumni</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-teal">Registration Open</span><button class="btn btn-outline btn-sm">Edit</button><button class="btn btn-teal btn-sm" onclick="showToast('Notification sent to all alumni!','teal')">Notify Alumni</button></div>
+        </div>
+        <div class="card" style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;opacity:0.7;">
+          <div style="background:var(--gray-border);color:var(--gray);border-radius:12px;padding:12px 16px;text-align:center;min-width:60px;flex-shrink:0;"><div style="font-size:20px;font-weight:800;line-height:1;">10</div><div style="font-size:11px;">APR</div></div>
+          <div style="flex:1;">
+            <div style="font-size:15px;font-weight:700;">Technical Symposium — TECHFEST 2025</div>
+            <div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">All day · Sports Ground · All Students</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;"><span class="badge badge-gray">Completed</span><button class="btn btn-outline btn-sm">View</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: TESTIMONIALS
+    ══════════════════════════════ -->
+    <div class="page" id="page-testimonials">
+      <div class="page-header">
+        <div><div class="page-title">Testimonials</div><div class="page-sub">Verified testimonials from students, alumni and teachers</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div><div style="font-weight:700;font-size:14px;">Rajesh Kumar</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Alumni · CSE 2021 · TCS Senior Engineer</div></div>
+            <div style="display:flex;gap:6px;align-items:center;"><div style="color:#F59E0B;font-size:14px;">★★★★★</div><span class="badge badge-green">Published</span></div>
+          </div>
+          <div style="font-size:13px;color:var(--navy);line-height:1.7;font-family:'Inter',sans-serif;">"JNTU gave me the foundation I needed. The faculty was always supportive and the placement cell worked tirelessly. I'm proud to be an alumnus and happy to give back through Colyx."</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:8px;">Submitted 1 week ago · Infrastructure ⭐⭐⭐⭐ · Placements ⭐⭐⭐⭐⭐</div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+            <div><div style="font-weight:700;font-size:14px;">Priya Sharma</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Student · CSE 3rd Year · Roll: 21B81A0245</div></div>
+            <div style="display:flex;gap:6px;align-items:center;"><div style="color:#F59E0B;font-size:14px;">★★★★☆</div><span class="badge badge-yellow">Under Review</span></div>
+          </div>
+          <div style="font-size:13px;color:var(--navy);line-height:1.7;font-family:'Inter',sans-serif;">"The labs and infrastructure are great. Faculty is very supportive. The placement training could be more intensive but overall a great college for engineering."</div>
+          <div style="font-size:11px;color:var(--gray);margin-top:8px;">Submitted 2 days ago</div>
+          <div style="display:flex;gap:8px;margin-top:10px;"><button class="btn btn-teal btn-sm" onclick="showToast('Testimonial published!','teal')">✓ Publish</button><button class="btn btn-danger btn-sm">Remove</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: PUBLIC PAGE
+    ══════════════════════════════ -->
+    <div class="page" id="page-public-page">
+      <div class="page-header">
+        <div><div class="page-title">College Public Page</div><div class="page-sub">colyx.in/jntu-college-of-engineering</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="showToast('Opening public page preview...')">👁 Preview</button>
+          <button class="btn btn-navy btn-sm" onclick="showToast('Changes saved!','teal')">💾 Save Changes</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Public Page Settings</div>
+          <div class="form-group"><label class="form-label">College Tagline</label><input class="form-input" type="text" value="Excellence in Engineering since 1985"></div>
+          <div class="form-group"><label class="form-label">About College (public)</label><textarea class="form-textarea" style="min-height:80px;">JNTU College of Engineering Hyderabad is one of the premier engineering institutions in Telangana, offering world-class education...</textarea></div>
+          <div class="form-group"><label class="form-label">Visible Sections</label>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--teal);"> Placement Stats</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--teal);"> Notable Alumni</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--teal);"> Achievement Wall</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--teal);"> Testimonials</label>
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;"><input type="checkbox" checked style="accent-color:var(--teal);"> Events</label>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Page Stats</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;justify-content:space-between;padding:12px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Page Views (this month)</span><span style="font-size:16px;font-weight:800;color:var(--teal-dark);">1,240</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">"I Studied Here" clicks</span><span style="font-size:16px;font-weight:800;color:var(--teal-dark);">34</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Contact form submissions</span><span style="font-size:16px;font-weight:800;color:var(--teal-dark);">12</span></div>
+            <div style="display:flex;justify-content:space-between;padding:12px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Alumni registered via page</span><span style="font-size:16px;font-weight:800;color:var(--teal-dark);">8</span></div>
+          </div>
+          <div style="margin-top:14px;padding:12px;background:var(--teal-soft);border-radius:10px;border:1px solid var(--teal);">
+            <div style="font-size:12px;font-weight:700;color:var(--teal-dark);margin-bottom:4px;">🔗 Your Public URL</div>
+            <div style="font-size:13px;color:var(--navy);font-family:'Inter',sans-serif;">colyx.in/jntu-college-hyderabad</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: BILLING
+    ══════════════════════════════ -->
+    <div class="page" id="page-billing">
+      <div class="page-header">
+        <div><div class="page-title">Billing & Subscription</div><div class="page-sub">Manage your Colyx subscription</div></div>
+        <button class="btn btn-outline btn-sm" onclick="showToast('Invoice downloading...')">⬇ Download Invoice</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card" style="border-top:3px solid var(--teal);">
+          <div class="card-title" style="margin-bottom:16px;">Current Plan</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;">Plan</span><span style="font-size:13px;font-weight:700;">Active · Founder's Club</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;">Rate</span><span style="font-size:13px;font-weight:700;">₹200/student/year</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;">Total Intake</span><span style="font-size:13px;font-weight:700;">1,840 students</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;">Subtotal</span><span style="font-size:13px;font-weight:700;">₹3,68,000</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;">GST (18%)</span><span style="font-size:13px;font-weight:700;">₹66,240</span></div>
+            <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--gray-border);"><span style="font-size:14px;font-weight:700;">Total Paid</span><span style="font-size:18px;font-weight:800;color:var(--teal-dark);">₹4,34,240</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Payment History</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Annual Subscription 2025-26</div><div style="font-size:11px;color:var(--gray);">Apr 2, 2025</div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;">₹4,34,240</div><span class="badge badge-green">Paid</span></div></div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;"><div><div style="font-size:13px;font-weight:600;">Annual Subscription 2024-25</div><div style="font-size:11px;color:var(--gray);">Apr 1, 2024</div></div><div style="text-align:right;"><div style="font-size:13px;font-weight:700;">₹4,12,800</div><span class="badge badge-green">Paid</span></div></div>
+          </div>
+          <div style="margin-top:14px;padding:12px;background:#FEF9C3;border-radius:10px;border:1px solid #FDE68A;">
+            <div style="font-size:12px;font-weight:700;color:#854D0E;">🔔 Renewal Reminder</div>
+            <div style="font-size:12px;color:#92400E;margin-top:2px;font-family:'Inter',sans-serif;">Your plan renews on April 2, 2026. Renew early to lock in Founder's Club pricing.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: ANALYTICS
+    ══════════════════════════════ -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div><div class="page-title">Analytics</div><div class="page-sub">Platform usage and engagement overview</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📱</div><div class="stat-num">78%</div><div class="stat-label">Student Registration Rate</div></div>
+        <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-num">62%</div><div class="stat-label">Alumni Activation Rate</div></div>
+        <div class="stat-card"><div class="stat-icon">📢</div><div class="stat-num">91%</div><div class="stat-label">Avg. Notification Read Rate</div></div>
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-num">48</div><div class="stat-label">Alumni Services This Month</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card"><div class="card-title" style="margin-bottom:14px;">Department Registration</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">CSE</span><span style="color:var(--teal-dark);font-weight:700;">94%</span></div><div class="progress-track"><div class="progress-fill" style="width:94%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">ECE</span><span style="color:var(--teal-dark);font-weight:700;">88%</span></div><div class="progress-track"><div class="progress-fill" style="width:88%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">EEE</span><span style="color:var(--teal-dark);font-weight:700;">76%</span></div><div class="progress-track"><div class="progress-fill" style="width:76%"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span style="font-weight:600;">MECH</span><span style="color:var(--teal-dark);font-weight:700;">65%</span></div><div class="progress-track"><div class="progress-fill" style="width:65%"></div></div></div>
+          </div>
+        </div>
+        <div class="card"><div class="card-title" style="margin-bottom:14px;">Alumni Services Activity</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;"><span style="font-size:13px;font-weight:600;">Resume Reviews</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">24</span></div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;"><span style="font-size:13px;font-weight:600;">Mock Interviews</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">18</span></div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;"><span style="font-size:13px;font-weight:600;">Interview Corrections</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">6</span></div>
+            <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:8px;font-weight:700;"><span style="font-size:13px;">Total Revenue (Colyx share)</span><span style="font-size:14px;color:var(--teal-dark);">₹4,320</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAGE: SETTINGS
+    ══════════════════════════════ -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div><div class="page-sub">Manage college profile and admin accounts</div></div>
+        <button class="btn btn-teal btn-sm" onclick="showToast('Settings saved!','teal')">💾 Save Changes</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">College Profile</div>
+          <div class="form-group"><label class="form-label">College Name</label><input class="form-input" type="text" value="JNTU College of Engineering Hyderabad"></div>
+          <div class="form-group"><label class="form-label">University</label><input class="form-input" type="text" value="JNTU Hyderabad"></div>
+          <div class="form-group"><label class="form-label">City</label><input class="form-input" type="text" value="Hyderabad"></div>
+          <div class="form-group"><label class="form-label">NAAC Grade</label><select class="form-select"><option selected>A+</option><option>A++</option><option>A</option><option>B++</option></select></div>
+          <div class="form-group"><label class="form-label">Website</label><input class="form-input" type="url" value="https://jntuceh.ac.in"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Admin Accounts</div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--cloud);border-radius:10px;">
+              <div><div style="font-size:13px;font-weight:700;">Dr. J. Prasad</div><div style="font-size:11px;color:var(--gray);">Principal · Full Access</div></div>
+              <span class="badge badge-teal">You</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--cloud);border-radius:10px;">
+              <div><div style="font-size:13px;font-weight:700;">Mr. Ravi Shankar</div><div style="font-size:11px;color:var(--gray);">Placement Officer</div></div>
+              <button class="btn btn-danger btn-sm">Remove</button>
+            </div>
+          </div>
+          <button class="btn btn-outline" style="width:100%;" onclick="openModal('modal-add-admin')">+ Add Admin</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+</div><!-- end main -->
+
+<!-- ══════════════════════════════
+     MODALS
+══════════════════════════════ -->
+
+<!-- Add Student -->
+<div class="modal-overlay" id="modal-add-student">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Student</div><div class="modal-close" onclick="closeModal('modal-add-student')">×</div></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" type="text" placeholder="Student name"></div>
+      <div class="form-group"><label class="form-label">Roll Number *</label><input class="form-input" type="text" placeholder="e.g. 21B81A0501"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Branch *</label><select class="form-select"><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option><option>CIVIL</option></select></div>
+      <div class="form-group"><label class="form-label">Year *</label><select class="form-select"><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" type="tel" placeholder="10-digit mobile"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="student@email.com"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-student')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-student');showToast('Student added successfully!','teal')">Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Staff -->
+<div class="modal-overlay" id="modal-add-staff">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Staff</div><div class="modal-close" onclick="closeModal('modal-add-staff')">×</div></div>
+    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" type="text" placeholder="Staff name"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Department *</label><select class="form-select"><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option></select></div>
+      <div class="form-group"><label class="form-label">Designation *</label><select class="form-select"><option>Professor</option><option>Associate Professor</option><option>Assistant Professor</option><option>HOD</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" type="tel" placeholder="10-digit mobile"></div>
+    <div class="form-group"><label class="form-label">Email *</label><input class="form-input" type="email" placeholder="staff@college.edu.in"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-staff')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-staff');showToast('Staff added successfully!','teal')">Add Staff</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Alumni -->
+<div class="modal-overlay" id="modal-add-alumni">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Alumni Manually</div><div class="modal-close" onclick="closeModal('modal-add-alumni')">×</div></div>
+    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" type="text" placeholder="Alumni name"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Passout Year *</label><input class="form-input" type="number" placeholder="e.g. 2018"></div>
+      <div class="form-group"><label class="form-label">Branch *</label><select class="form-select"><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" type="tel" placeholder="10-digit mobile"></div>
+    <div class="form-group"><label class="form-label">Current Company</label><input class="form-input" type="text" placeholder="Company name"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-alumni')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-alumni');showToast('Alumni added successfully!','teal')">Add Alumni</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Placement -->
+<div class="modal-overlay" id="modal-add-placement">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Placement Data</div><div class="modal-close" onclick="closeModal('modal-add-placement')">×</div></div>
+    <div class="form-group"><label class="form-label">Company Name *</label><input class="form-input" type="text" placeholder="e.g. TCS"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Students Placed *</label><input class="form-input" type="number" placeholder="Count"></div>
+      <div class="form-group"><label class="form-label">Batch Year *</label><input class="form-input" type="number" placeholder="e.g. 2024"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Min Package (LPA)</label><input class="form-input" type="text" placeholder="e.g. 3.6"></div>
+      <div class="form-group"><label class="form-label">Max Package (LPA)</label><input class="form-input" type="text" placeholder="e.g. 7.2"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Branches</label><input class="form-input" type="text" placeholder="e.g. CSE, ECE or All"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-placement')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-placement');showToast('Placement data added!','teal')">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Achievement -->
+<div class="modal-overlay" id="modal-add-achievement">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Achievement</div><div class="modal-close" onclick="closeModal('modal-add-achievement')">×</div></div>
+    <div class="form-group"><label class="form-label">Achievement Title *</label><input class="form-input" type="text" placeholder="e.g. NAAC A++ Accreditation"></div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" type="text" placeholder="Brief description"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Category</label><select class="form-select"><option>Accreditation</option><option>Ranking</option><option>Award</option><option>Research</option><option>Other</option></select></div>
+      <div class="form-group"><label class="form-label">Valid Until</label><input class="form-input" type="text" placeholder="e.g. 2027 or Permanent"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-achievement')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-achievement');showToast('Achievement added!','teal')">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Event -->
+<div class="modal-overlay" id="modal-add-event">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Create Event</div><div class="modal-close" onclick="closeModal('modal-add-event')">×</div></div>
+    <div class="form-group"><label class="form-label">Event Title *</label><input class="form-input" type="text" placeholder="e.g. Campus Recruitment Drive"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" style="min-height:80px;" placeholder="Event details..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date *</label><input class="form-input" type="date"></div>
+      <div class="form-group"><label class="form-label">Time</label><input class="form-input" type="time"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Venue</label><input class="form-input" type="text" placeholder="e.g. Main Auditorium"></div>
+    <div class="form-group"><label class="form-label">Who Can See</label><select class="form-select"><option>Everyone</option><option>Students Only</option><option>Alumni Only</option><option>All Staff</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-event')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-event');showToast('Event created!','teal')">Create Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Admin -->
+<div class="modal-overlay" id="modal-add-admin">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Admin Account</div><div class="modal-close" onclick="closeModal('modal-add-admin')">×</div></div>
+    <div class="form-group"><label class="form-label">Full Name *</label><input class="form-input" type="text" placeholder="Admin name"></div>
+    <div class="form-group"><label class="form-label">Role *</label><select class="form-select"><option>Placement Officer</option><option>HOD</option></select></div>
+    <div class="form-group"><label class="form-label">Mobile *</label><input class="form-input" type="tel" placeholder="10-digit mobile"></div>
+    <div class="form-group"><label class="form-label">Email *</label><input class="form-input" type="email" placeholder="admin@college.edu.in"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-admin')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-admin');showToast('Admin account created!','teal')">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ PAGE NAVIGATION ══
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+  }
+  const titles = {
+    overview:'Overview', students:'Student Management', staff:'Staff Management',
+    alumni:'Alumni Management', notifications:'Notifications', placements:'Placement Details',
+    achievements:'Achievement Wall', events:'Events', testimonials:'Testimonials',
+    'public-page':'College Public Page', billing:'Billing & Subscription',
+    analytics:'Analytics', settings:'Settings'
+  };
+  document.getElementById('header-title').textContent = titles[id] || id;
+  closeSidebar();
+}
+
+// ══ STUDENT TABS ══
+function switchStudentTab(tab) {
+  document.getElementById('students-all').style.display = tab==='all' ? 'block' : 'none';
+  document.getElementById('students-approvals').style.display = tab==='approvals' ? 'block' : 'none';
+  document.getElementById('students-conversion').style.display = tab==='conversion' ? 'block' : 'none';
+  document.querySelectorAll('#page-students .tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i===0&&tab==='all')||(i===1&&tab==='approvals')||(i===2&&tab==='conversion'));
+  });
+}
+function showTab(tabId) {
+  if (tabId === 'tab-approvals') switchStudentTab('approvals');
+}
+
+// ══ GENERIC TAB SWITCHER ══
+function switchTab2(btn, showId, containerId) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('[id^="'+containerId.split('-')[0]+'"]').forEach(el => {
+    if (el.id !== containerId) el.style.display = 'none';
+  });
+  // show all direct children divs
+  const parent = btn.closest('.page') || document.body;
+  parent.querySelectorAll('#'+containerId+' > div').forEach(el => el.style.display = 'none');
+  document.getElementById(showId).style.display = 'block';
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ══ NOTIFICATION TARGET ══
+function toggleTarget(el) {
+  el.classList.toggle('selected');
+}
+function openNotifComposer() {
+  document.getElementById('notif-title').focus();
+}
+function sendNotification() {
+  const title = document.getElementById('notif-title').value;
+  const msg = document.getElementById('notif-msg').value;
+  if (!title || !msg) { showToast('Please enter title and message'); return; }
+  showToast('Notification sent successfully!', 'teal');
+  document.getElementById('notif-title').value = '';
+  document.getElementById('notif-msg').value = '';
+}
+
+// ══ TABLE FILTER ══
+function filterTable(el, tableId) {
+  const term = typeof el.value === 'string' ? el.value.toLowerCase() : '';
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  table.querySelectorAll('tbody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+}
+
+// ══ MODAL ══
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+// ══ MOBILE SIDEBAR ══
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ══ TOAST ══
+function goHome() { window.location.href='colyx_landing_page.html'; }
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' '+type : '') + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colyx — Alumni Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D1B3E; --navy-mid: #1A2F5A;
+  --teal: #00C9A7; --teal-dark: #009E84; --teal-soft: #E6FAF7;
+  --white: #FFFFFF; --cloud: #F7F8FA;
+  --gray: #64748B; --gray-border: #E2E8F0;
+  --sidebar-w: 240px; --error: #EF4444; --warning: #F59E0B; --success: #10B981;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--cloud); color:var(--navy); overflow-x:hidden; }
+
+.sidebar { position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; z-index:100; transition:transform 0.3s; }
+.sidebar-logo { padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.07); font-size:20px; font-weight:800; color:white; }
+.sidebar-logo span { color:var(--teal); }
+.sidebar-user { padding:14px 24px; border-bottom:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; gap:10px; }
+.user-avatar { width:38px; height:38px; border-radius:50%; background:var(--teal); color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+.user-name { font-size:13px; font-weight:700; color:white; }
+.user-info { font-size:11px; color:rgba(255,255,255,0.4); margin-top:1px; font-family:'Inter',sans-serif; }
+.sidebar-nav { flex:1; overflow-y:auto; padding:12px 0; }
+.nav-section-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:1.5px; padding:12px 24px 6px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 24px; font-size:13px; font-weight:600; color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.2s; border-left:3px solid transparent; }
+.nav-item:hover { color:white; background:rgba(255,255,255,0.05); }
+.nav-item.active { color:white; background:rgba(0,201,167,0.1); border-left-color:var(--teal); }
+.nav-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.nav-badge { margin-left:auto; background:var(--teal); color:var(--navy); font-size:10px; font-weight:800; padding:2px 7px; border-radius:10px; }
+.nav-badge.warn { background:var(--warning); color:white; }
+.sidebar-footer { padding:16px 24px; border-top:1px solid rgba(255,255,255,0.07); }
+.logout-btn { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:rgba(255,255,255,0.4); cursor:pointer; transition:color 0.2s; }
+.logout-btn:hover { color:white; }
+
+.main { margin-left:var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; }
+.header { position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.97); backdrop-filter:blur(12px); border-bottom:1px solid var(--gray-border); height:64px; display:flex; align-items:center; padding:0 32px; justify-content:space-between; }
+.header-title { font-size:18px; font-weight:800; color:var(--navy); }
+.header-right { display:flex; align-items:center; gap:14px; }
+.header-notif { width:38px; height:38px; border-radius:50%; background:var(--cloud); border:1px solid var(--gray-border); display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; position:relative; transition:all 0.2s; }
+.header-notif:hover { background:var(--teal-soft); border-color:var(--teal); }
+.notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:var(--teal); border-radius:50%; border:2px solid white; }
+.header-avatar { width:38px; height:38px; border-radius:50%; background:var(--teal); color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; cursor:pointer; }
+.mob-menu-btn { display:none; cursor:pointer; font-size:22px; }
+
+.content { padding:28px 32px; flex:1; }
+.page { display:none; }
+.page.active { display:block; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.page-title { font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-0.5px; }
+.page-sub { font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.btn { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; padding:9px 18px; border-radius:9px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; text-decoration:none; }
+.btn-navy { background:var(--navy); color:white; }
+.btn-navy:hover { background:var(--navy-mid); }
+.btn-teal { background:var(--teal); color:var(--navy); }
+.btn-teal:hover { background:var(--teal-dark); color:white; }
+.btn-outline { background:white; color:var(--navy); border:1.5px solid var(--gray-border); }
+.btn-outline:hover { border-color:var(--teal); color:var(--teal-dark); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+.btn-danger { background:#FEF2F2; color:var(--error); border:1px solid #FEE2E2; }
+.btn-danger:hover { background:var(--error); color:white; }
+
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:white; border-radius:16px; padding:20px; border-top:3px solid var(--teal); box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform 0.2s; }
+.stat-card:hover { transform:translateY(-2px); }
+.stat-icon { font-size:22px; margin-bottom:8px; }
+.stat-num { font-size:26px; font-weight:800; color:var(--navy); letter-spacing:-1px; line-height:1; }
+.stat-label { font-size:12px; color:var(--gray); margin-top:4px; font-family:'Inter',sans-serif; }
+.stat-change { font-size:11px; font-weight:600; margin-top:6px; color:var(--teal-dark); }
+
+.card { background:white; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-bottom:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+.card-title { font-size:15px; font-weight:700; color:var(--navy); }
+.card-sub { font-size:12px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+.badge-green { background:#DCFCE7; color:#166534; }
+.badge-yellow { background:#FEF9C3; color:#854D0E; }
+.badge-teal { background:var(--teal-soft); color:var(--teal-dark); }
+.badge-gray { background:var(--cloud); color:var(--gray); }
+.badge-blue { background:#DBEAFE; color:#1E40AF; }
+.badge-navy { background:#EEF2F8; color:var(--navy); }
+.badge-orange { background:#FFF7ED; color:#C2410C; }
+
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:2px solid var(--gray-border); white-space:nowrap; }
+td { font-size:13px; color:var(--navy); padding:12px 14px; border-bottom:1px solid var(--gray-border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--cloud); }
+.td-sub { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.tab-bar { display:flex; gap:4px; background:var(--cloud); border-radius:12px; padding:4px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn { flex:1; min-width:80px; padding:8px 12px; text-align:center; font-size:13px; font-weight:600; color:var(--gray); border-radius:9px; cursor:pointer; transition:all 0.2s; border:none; background:none; font-family:'Plus Jakarta Sans',sans-serif; }
+.tab-btn.active { background:white; color:var(--navy); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+
+.filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.search-bar { display:flex; align-items:center; gap:8px; background:white; border:1.5px solid var(--gray-border); border-radius:10px; padding:8px 14px; }
+.search-bar:focus-within { border-color:var(--teal); }
+.search-bar input { border:none; background:none; outline:none; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); width:180px; }
+.filter-select { padding:8px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:white; outline:none; cursor:pointer; }
+
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; font-weight:700; color:var(--navy); margin-bottom:5px; display:block; }
+.form-input { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; transition:all 0.2s; }
+.form-input:focus { border-color:var(--teal); background:white; }
+.form-select { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; cursor:pointer; }
+.form-select:focus { border-color:var(--teal); }
+.form-textarea { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; resize:vertical; min-height:90px; }
+.form-textarea:focus { border-color:var(--teal); background:white; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:white; border-radius:20px; padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; animation:fadeIn 0.25s ease; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title { font-size:18px; font-weight:800; color:var(--navy); }
+.modal-close { font-size:22px; cursor:pointer; color:var(--gray); line-height:1; }
+.modal-footer { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+.toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:1000; transform:translateY(80px); opacity:0; transition:all 0.3s; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.teal { background:var(--teal); color:var(--navy); }
+
+.activity-item { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+.activity-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; background:var(--teal-soft); }
+.activity-text { font-size:13px; color:var(--navy); font-weight:500; line-height:1.5; }
+.activity-time { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.progress-track { height:6px; background:var(--gray-border); border-radius:3px; overflow:hidden; margin:4px 0; }
+.progress-fill { height:100%; background:var(--teal); border-radius:3px; }
+
+.info-box { background:var(--cloud); border-left:3px solid var(--teal); border-radius:0 10px 10px 0; padding:12px 16px; margin:12px 0; font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; line-height:1.6; }
+
+.alumni-card { background:var(--cloud); border-radius:14px; padding:16px; border:1.5px solid var(--gray-border); transition:all 0.2s; }
+.alumni-card:hover { border-color:var(--teal); background:var(--teal-soft); transform:translateY(-2px); }
+.alumni-av { width:44px; height:44px; border-radius:50%; background:var(--navy); color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; margin-bottom:10px; }
+.alumni-name { font-size:13px; font-weight:700; color:var(--navy); }
+.alumni-role { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+.alumni-batch { font-size:10px; color:var(--teal-dark); font-weight:600; margin-top:4px; }
+
+.service-toggle { display:flex; align-items:center; justify-content:space-between; padding:16px; background:var(--cloud); border-radius:12px; margin-bottom:12px; border:1.5px solid var(--gray-border); transition:all 0.2s; }
+.service-toggle.active-svc { border-color:var(--teal); background:var(--teal-soft); }
+.toggle-switch { width:44px; height:24px; background:var(--gray-border); border-radius:12px; position:relative; cursor:pointer; transition:background 0.2s; flex-shrink:0; }
+.toggle-switch.on { background:var(--teal); }
+.toggle-switch::after { content:''; position:absolute; width:18px; height:18px; background:white; border-radius:50%; top:3px; left:3px; transition:transform 0.2s; box-shadow:0 1px 4px rgba(0,0,0,0.2); }
+.toggle-switch.on::after { transform:translateX(20px); }
+
+.booking-req { background:var(--cloud); border-radius:14px; padding:16px; display:flex; align-items:center; gap:16px; margin-bottom:12px; border:1.5px solid var(--gray-border); }
+.booking-icon { font-size:28px; flex-shrink:0; }
+.booking-info { flex:1; }
+.booking-title { font-size:14px; font-weight:700; color:var(--navy); }
+.booking-meta { font-size:12px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-top:12px; }
+.cal-day-label { font-size:10px; font-weight:700; color:var(--gray); text-align:center; padding:4px 0; text-transform:uppercase; }
+.cal-day { aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.2s; background:var(--cloud); color:var(--gray); }
+.cal-day:hover { background:var(--teal-soft); color:var(--teal-dark); }
+.cal-day.available { background:var(--teal-soft); color:var(--teal-dark); border:1.5px solid var(--teal); }
+.cal-day.booked { background:var(--navy); color:white; }
+.cal-day.today { border:2px solid var(--teal); font-weight:800; }
+.cal-day.empty { background:transparent; cursor:default; }
+
+.review-card { background:var(--cloud); border-radius:14px; padding:16px; margin-bottom:12px; border-left:3px solid var(--teal); }
+.review-text { font-size:13px; color:var(--navy); line-height:1.7; font-family:'Inter',sans-serif; font-style:italic; margin-bottom:10px; }
+.review-person { display:flex; align-items:center; gap:10px; }
+.review-av { width:30px; height:30px; border-radius:50%; background:var(--navy); color:white; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+.review-name { font-size:12px; font-weight:700; color:var(--navy); }
+.review-meta { font-size:10px; color:var(--gray); font-family:'Inter',sans-serif; }
+
+.matched-card { background:white; border-radius:14px; padding:16px; border:1.5px solid var(--gray-border); transition:all 0.2s; display:flex; align-items:center; gap:14px; margin-bottom:12px; }
+.matched-card:hover { border-color:var(--teal); box-shadow:0 4px 16px rgba(0,201,167,0.1); }
+.matched-av { width:44px; height:44px; border-radius:50%; background:var(--navy); color:white; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+
+.earning-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--gray-border); }
+.earning-row:last-child { border-bottom:none; }
+
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; }
+.sidebar-overlay.open { display:block; }
+
+@media(max-width:768px) {
+
+  /* ══ MOBILE GRID FIX ══ */
+  .content [style*="grid-template-columns:1fr 1fr"],
+  .content [style*="grid-template-columns: 1fr 1fr"],
+  .content [style*="grid-template-columns:2fr 1fr"],
+  .content [style*="grid-template-columns: 2fr 1fr"],
+  .content [style*="grid-template-columns:1fr 2fr"],
+  .content [style*="grid-template-columns: 1fr 2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .pipeline-wrap { grid-template-columns: 1fr 1fr !important; }
+  .mentor-grid { grid-template-columns: 1fr !important; }
+  .inspired-card { min-width: 0; }
+  [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr 1fr !important; }
+  [style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }
+
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .mob-menu-btn { display:block; }
+  .header { padding:0 20px; }
+  .content { padding:20px 16px; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .form-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">Col<span>yx</span></div>
+  <div class="sidebar-user">
+    <div class="user-avatar">RK</div>
+    <div>
+      <div class="user-name">Rajesh Kumar</div>
+      <div class="user-info">Alumni · CSE 2021 · TCS Senior Engineer</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">🏠</span>Home</div>
+    <div class="nav-item" onclick="showPage('notifications',this)"><span class="nav-icon">🔔</span>Notifications<span class="nav-badge">3</span></div>
+
+    <div class="nav-section-label">My College</div>
+    <div class="nav-item" onclick="showPage('college',this)"><span class="nav-icon">🏛️</span>My College</div>
+    <div class="nav-item" onclick="showPage('college-alumni',this)"><span class="nav-icon">👥</span>College Alumni</div>
+    <div class="nav-item" onclick="showPage('students',this)"><span class="nav-icon">🎓</span>Current Students</div>
+    <div class="nav-item" onclick="showPage('teachers',this)"><span class="nav-icon">📚</span>My Teachers</div>
+
+    <div class="nav-section-label">Mentoring</div>
+    <div class="nav-item" onclick="showPage('services',this)"><span class="nav-icon">🎯</span>My Services</div>
+    <div class="nav-item" onclick="showPage('bookings',this)"><span class="nav-icon">📋</span>Bookings<span class="nav-badge warn">2</span></div>
+    <div class="nav-item" onclick="showPage('calendar',this)"><span class="nav-icon">📅</span>Availability</div>
+    <div class="nav-item" onclick="showPage('earnings',this)"><span class="nav-icon">💰</span>Earnings</div>
+
+    <div class="nav-section-label">Profile</div>
+    <div class="nav-item" onclick="showPage('profile',this)"><span class="nav-icon">👤</span>My Profile</div>
+    <div class="nav-item" onclick="showPage('reputation',this)"><span class="nav-icon">🏆</span>My Reputation</div>
+    <div class="nav-item" onclick="showPage('giveback',this)"><span class="nav-icon">🙏</span>Give Back</div>
+    <div class="nav-item" onclick="showPage('story',this)"><span class="nav-icon">📖</span>My Story</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="logout-btn" onclick="window.location.href='colyx_login.html'"><span>🚪</span>Logout</div>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="mob-menu-btn" onclick="openSidebar()">☰</div>
+      <div class="header-title" id="header-title">Home</div>
+    </div>
+    <div class="header-right">
+      <div class="header-notif" onclick="showPage('notifications',null)">🔔<div class="notif-dot"></div></div>
+      <div class="header-avatar">RK</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══ HOME ══ -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Welcome back, Rajesh! 👋</div>
+          <div class="page-sub">CSE 2021 · TCS Senior Engineer · JNTU College of Engineering</div>
+        </div>
+        <button class="btn btn-navy" onclick="showPage('services',null)">🎯 Manage Services</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-num">12</div><div class="stat-label">Sessions Completed</div><div class="stat-change">↑ 3 this month</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num">₹4,500</div><div class="stat-label">Total Earned</div><div class="stat-change">↑ ₹1,200 this month</div></div>
+        <div class="stat-card"><div class="stat-icon">🙏</div><div class="stat-num">5</div><div class="stat-label">Free Sessions Given</div><div class="stat-change">Colyx Seva Badge 🏅</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-num">4.9</div><div class="stat-label">Average Rating</div><div class="stat-change">Based on 12 reviews</div></div>
+      </div>
+
+      <!-- Smart Matching -->
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">🎯 Students Matching Your Profile</div><div class="card-sub">These students are targeting companies like yours — they need your help!</div></div><span class="badge badge-teal">3 matches</span></div>
+        <div class="matched-card"><div class="matched-av">RK</div><div style="flex:1;"><div style="font-size:13px;font-weight:700;">Rahul Kumar</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">CSE 3rd Year · Targeting TCS, Infosys</div></div><span class="badge badge-teal">Career Match ✓</span><button class="btn btn-teal btn-sm" style="margin-left:10px;" onclick="showToast('Connecting with Rahul...','teal')">Help →</button></div>
+        <div class="matched-card"><div class="matched-av">PS</div><div style="flex:1;"><div style="font-size:13px;font-weight:700;">Priya Sharma</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">CSE 3rd Year · Targeting Wipro, HCL</div></div><span class="badge badge-teal">Career Match ✓</span><button class="btn btn-teal btn-sm" style="margin-left:10px;" onclick="showToast('Connecting with Priya...','teal')">Help →</button></div>
+        <div class="matched-card"><div class="matched-av">AR</div><div style="flex:1;"><div style="font-size:13px;font-weight:700;">Arun Reddy</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">CSE 2nd Year · Targeting TCS, Cognizant</div></div><span class="badge badge-teal">Career Match ✓</span><button class="btn btn-teal btn-sm" style="margin-left:10px;" onclick="showToast('Connecting with Arun...','teal')">Help →</button></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Pending Bookings -->
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">📋 Pending Requests</div><div class="card-sub">2 students waiting for your response</div></div></div>
+          <div class="booking-req" style="border-left:3px solid var(--warning);">
+            <div class="booking-icon">🎤</div>
+            <div class="booking-info"><div class="booking-title">Mock Interview — Rahul Kumar</div><div class="booking-meta">April 20 · 4 PM · ₹499 · Requested today</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Booking accepted!','teal')">Accept</button><button class="btn btn-danger btn-sm">Decline</button></div>
+          </div>
+          <div class="booking-req" style="border-left:3px solid var(--warning);">
+            <div class="booking-icon">📄</div>
+            <div class="booking-info"><div class="booking-title">Resume Review — Priya Sharma</div><div class="booking-meta">Flexible · FREE · Requested yesterday</div></div>
+            <div style="display:flex;flex-direction:column;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Booking accepted!','teal')">Accept</button><button class="btn btn-danger btn-sm">Decline</button></div>
+          </div>
+        </div>
+
+        <!-- Activity -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Activity</div></div>
+          <div class="activity-item"><div class="activity-dot">⭐</div><div><div class="activity-text">Kiran Naidu gave you 5 stars after mock interview</div><div class="activity-time">2 days ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot">💰</div><div><div class="activity-text">₹399 credited to your account — resume review</div><div class="activity-time">3 days ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot">🙏</div><div><div class="activity-text">Free session completed with Sneha Patel — Seva Badge earned!</div><div class="activity-time">1 week ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot">📢</div><div><div class="activity-text">Alumni Meet 2025 notification from JNTU College</div><div class="activity-time">1 week ago</div></div></div>
+        </div>
+      </div>
+
+      <!-- Network Strength -->
+      <div class="card">
+        <div class="card-header"><div><div class="card-title">🌐 Your Alumni Network Strength</div><div class="card-sub">You are connected to people across India through JNTU</div></div></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+          <div style="text-align:center;padding:16px;background:var(--cloud);border-radius:12px;"><div style="font-size:24px;font-weight:800;color:var(--navy);">342</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">JNTU Alumni</div></div>
+          <div style="text-align:center;padding:16px;background:var(--cloud);border-radius:12px;"><div style="font-size:24px;font-weight:800;color:var(--navy);">48</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">Companies covered</div></div>
+          <div style="text-align:center;padding:16px;background:var(--cloud);border-radius:12px;"><div style="font-size:24px;font-weight:800;color:var(--navy);">1,840</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">Current Students</div></div>
+          <div style="text-align:center;padding:16px;background:var(--cloud);border-radius:12px;"><div style="font-size:24px;font-weight:800;color:var(--teal-dark);">87</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">Faculty members</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MY COLLEGE ══ -->
+    <div class="page" id="page-college">
+      <div class="page-header"><div><div class="page-title">My College</div><div class="page-sub">JNTU College of Engineering — Your alma mater</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:48px;margin-bottom:12px;">🏛️</div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px;">JNTU College of Engineering</div>
+          <div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-bottom:12px;">Hyderabad, Telangana</div>
+          <div style="display:flex;flex-direction:column;gap:6px;text-align:left;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--gray-border);"><span style="color:var(--gray);">My Batch</span><span style="font-weight:600;">CSE 2021</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--gray-border);"><span style="color:var(--gray);">NAAC Grade</span><span style="font-weight:600;color:var(--teal-dark);">A+</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--gray-border);"><span style="color:var(--gray);">Placement Rate</span><span style="font-weight:600;">89%</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;"><span style="color:var(--gray);">My Status</span><span class="badge badge-green">Verified Alumni</span></div>
+          </div>
+          <a href="#" style="display:block;margin-top:14px;font-size:12px;color:var(--teal-dark);text-decoration:none;font-weight:600;" onclick="showToast('Opening public page...')">View Public Page →</a>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📢 College Notices</div><span class="badge badge-teal">2 new</span></div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:var(--teal-soft);border-radius:12px;padding:14px;border-left:3px solid var(--teal);"><div style="font-size:14px;font-weight:700;">Annual Alumni Meet 2025 — May 15th</div><div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">Register before April 30th. College grounds. All alumni welcome.</div><div style="font-size:11px;color:var(--teal-dark);margin-top:6px;font-weight:600;">1 week ago · Unread</div></div>
+              <div style="background:var(--cloud);border-radius:12px;padding:14px;border-left:3px solid var(--gray-border);"><div style="font-size:14px;font-weight:700;">TCS Hiring — Refer a Junior</div><div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:4px;">TCS is looking for freshers. Refer your juniors through your employee referral portal.</div><div style="font-size:11px;color:var(--gray);margin-top:6px;">2 weeks ago</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">🏅 College Achievements</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;"><span class="badge badge-navy">NAAC A+</span><span class="badge badge-navy">NIRF Rank #124</span><span class="badge badge-navy">NBA Accredited</span><span class="badge badge-navy">Best College 2023</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COLLEGE ALUMNI ══ -->
+    <div class="page" id="page-college-alumni">
+      <div class="page-header"><div><div class="page-title">College Alumni Network</div><div class="page-sub">All JNTU alumni — seniors, juniors, batchmates — everyone connected</div></div></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('ca-all','ca-tabs',this)">All Alumni</button>
+        <button class="tab-btn" onclick="switchTab('ca-batch','ca-tabs',this)">My Batch (2021)</button>
+        <button class="tab-btn" onclick="switchTab('ca-senior','ca-tabs',this)">Seniors</button>
+        <button class="tab-btn" onclick="switchTab('ca-junior','ca-tabs',this)">Juniors</button>
+      </div>
+      <div id="ca-tabs">
+        <div id="ca-all">
+          <div class="filter-bar">
+            <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search alumni..."></div>
+            <select class="filter-select"><option>All Batches</option><option>2024</option><option>2023</option><option>2022</option><option>2021</option><option>2020</option><option>2019</option></select>
+            <select class="filter-select"><option>All Branches</option><option>CSE</option><option>ECE</option><option>EEE</option><option>MECH</option></select>
+            <select class="filter-select"><option>All Companies</option><option>TCS</option><option>Infosys</option><option>Amazon</option><option>Google</option></select>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div class="alumni-card"><div class="alumni-av">PM</div><div class="alumni-name">Priya Mehta</div><div class="alumni-role">Tech Lead · Infosys</div><div class="alumni-batch">CSE 2020 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Priya Mehta')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">AS</div><div class="alumni-name">Arun Sharma</div><div class="alumni-role">SDE-2 · Amazon</div><div class="alumni-batch">CSE 2019 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Arun Sharma')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">KR</div><div class="alumni-name">Kavitha Reddy</div><div class="alumni-role">Manager · Wipro</div><div class="alumni-batch">ECE 2018 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Kavitha Reddy')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">NK</div><div class="alumni-name">Nikhil Kumar</div><div class="alumni-role">Software Dev · HCL</div><div class="alumni-batch">CSE 2022 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Nikhil')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">SR</div><div class="alumni-name">Swathi Rao</div><div class="alumni-role">Data Analyst · Accenture</div><div class="alumni-batch">ECE 2023 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Swathi')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">VN</div><div class="alumni-name">Vijay Naidu</div><div class="alumni-role">Senior Dev · Cognizant</div><div class="alumni-batch">CSE 2020 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Vijay')">Connect</button></div>
+            <div class="alumni-card"><div class="alumni-av">AN</div><div class="alumni-name">Anitha Nair</div><div class="alumni-role">SWE · Google</div><div class="alumni-batch">CSE 2018 Batch</div><button class="btn btn-outline btn-sm" style="width:100%;margin-top:10px;" onclick="showToast('Connected with Anitha')">Connect</button></div>
+            <div class="alumni-card" style="background:var(--teal-soft);border-color:var(--teal);cursor:pointer;text-align:center;" onclick="showToast('Showing all 342 alumni')"><div style="font-size:28px;margin:14px 0 8px;">+335</div><div class="alumni-name" style="color:var(--teal-dark);">View All Alumni</div></div>
+          </div>
+        </div>
+        <div id="ca-batch" style="display:none;">
+          <div class="card"><div class="card-title" style="margin-bottom:14px;">CSE 2021 Batch — Your Batchmates</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+              <div class="alumni-card"><div class="alumni-av" style="background:var(--teal);color:var(--navy);">RK</div><div class="alumni-name">Rajesh Kumar</div><div class="alumni-role">You · TCS</div><div class="alumni-batch">CSE 2021</div></div>
+              <div class="alumni-card"><div class="alumni-av">DS</div><div class="alumni-name">Deepak Singh</div><div class="alumni-role">Engineer · Infosys</div><div class="alumni-batch">CSE 2021</div></div>
+              <div class="alumni-card"><div class="alumni-av">LM</div><div class="alumni-name">Lakshmi Murthy</div><div class="alumni-role">Developer · Wipro</div><div class="alumni-batch">CSE 2021</div></div>
+              <div class="alumni-card"><div class="alumni-av">SB</div><div class="alumni-name">Suresh Babu</div><div class="alumni-role">Engineer · HCL</div><div class="alumni-batch">CSE 2021</div></div>
+            </div>
+            <div style="margin-top:16px;padding:12px;background:var(--teal-soft);border-radius:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:13px;font-weight:600;color:var(--teal-dark);">🎂 2021 batch — 5 year reunion in 2026!</div>
+              <button class="btn btn-teal btn-sm" onclick="openModal('modal-reunion')">Organize Reunion</button>
+            </div>
+          </div>
+        </div>
+        <div id="ca-senior" style="display:none;">
+          <div class="info-box">Alumni from batches before yours — learn from their experience!</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div class="alumni-card"><div class="alumni-av">AN</div><div class="alumni-name">Anitha Nair</div><div class="alumni-role">SWE · Google</div><div class="alumni-batch">CSE 2018 · Senior</div></div>
+            <div class="alumni-card"><div class="alumni-av">AS</div><div class="alumni-name">Arun Sharma</div><div class="alumni-role">SDE-2 · Amazon</div><div class="alumni-batch">CSE 2019 · Senior</div></div>
+            <div class="alumni-card"><div class="alumni-av">KR</div><div class="alumni-name">Kavitha Reddy</div><div class="alumni-role">Manager · Wipro</div><div class="alumni-batch">ECE 2018 · Senior</div></div>
+            <div class="alumni-card"><div class="alumni-av">PM</div><div class="alumni-name">Priya Mehta</div><div class="alumni-role">Tech Lead · Infosys</div><div class="alumni-batch">CSE 2020 · Senior</div></div>
+          </div>
+        </div>
+        <div id="ca-junior" style="display:none;">
+          <div class="info-box">Alumni from batches after yours — they look up to you!</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+            <div class="alumni-card"><div class="alumni-av">NK</div><div class="alumni-name">Nikhil Kumar</div><div class="alumni-role">Developer · HCL</div><div class="alumni-batch">CSE 2022 · Junior</div></div>
+            <div class="alumni-card"><div class="alumni-av">SR</div><div class="alumni-name">Swathi Rao</div><div class="alumni-role">Analyst · Accenture</div><div class="alumni-batch">ECE 2023 · Junior</div></div>
+            <div class="alumni-card"><div class="alumni-av">VK</div><div class="alumni-name">Vikram Rao</div><div class="alumni-role">Fresher · TCS</div><div class="alumni-batch">CSE 2024 · Junior</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CURRENT STUDENTS ══ -->
+    <div class="page" id="page-students">
+      <div class="page-header"><div><div class="page-title">Current Students</div><div class="page-sub">Students from your college who need your guidance</div></div></div>
+      <div class="filter-bar">
+        <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search students..."></div>
+        <select class="filter-select"><option>All Years</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+        <select class="filter-select"><option>All Branches</option><option>CSE</option><option>ECE</option><option>EEE</option></select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Year / Branch</th><th>Career Goal</th><th>Colyx Score</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><div style="font-weight:600;">Rahul Kumar</div><div class="td-sub">21B81A0501</div></td><td>3rd Year · CSE</td><td>Software Engineer at TCS/Google</td><td><span style="font-weight:700;color:var(--teal-dark);">72</span></td><td><button class="btn btn-teal btn-sm" onclick="showToast('Offering help to Rahul...','teal')">Offer Help</button></td></tr>
+              <tr><td><div style="font-weight:600;">Priya Sharma</div><div class="td-sub">21B81A0245</div></td><td>3rd Year · CSE</td><td>Data Engineer at Infosys</td><td><span style="font-weight:700;color:var(--teal-dark);">85</span></td><td><button class="btn btn-teal btn-sm" onclick="showToast('Offering help to Priya...','teal')">Offer Help</button></td></tr>
+              <tr><td><div style="font-weight:600;">Arun Reddy</div><div class="td-sub">22B81A0312</div></td><td>2nd Year · CSE</td><td>Full Stack Developer</td><td><span style="font-weight:700;color:var(--gray);">60</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('Offering help to Arun...','teal')">Offer Help</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MY TEACHERS ══ -->
+    <div class="page" id="page-teachers">
+      <div class="page-header"><div><div class="page-title">My Teachers</div><div class="page-sub">Faculty who taught you — connected forever on Colyx</div></div></div>
+      <div class="info-box">Your teachers are always connected to you on Colyx — even if they have moved to another college.</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+        <div class="card" style="border-top:3px solid var(--teal);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div style="width:48px;height:48px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;">RK</div><div><div style="font-size:14px;font-weight:700;">Dr. Ramesh Kumar</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">HOD · CSE · JNTU</div></div></div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-bottom:10px;">Taught you: DSA, Algorithms</div><span class="badge badge-green">Active on Colyx</span></div>
+        <div class="card" style="border-top:3px solid var(--teal);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div style="width:48px;height:48px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;">SV</div><div><div style="font-size:14px;font-weight:700;">Prof. Sunita Verma</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Associate Prof · CSE · JNTU</div></div></div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-bottom:10px;">Taught you: DBMS, SQL</div><span class="badge badge-green">Active on Colyx</span></div>
+        <div class="card" style="border-top:3px solid var(--teal);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;"><div style="width:48px;height:48px;border-radius:50%;background:var(--navy-mid);color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;">KM</div><div><div style="font-size:14px;font-weight:700;">Prof. Krishnamurthy</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Ex-Faculty · Moved to IIT</div></div></div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-bottom:10px;">Taught you: Maths, Statistics</div><span class="badge badge-blue">Ex-Faculty · Connected</span></div>
+      </div>
+    </div>
+
+    <!-- ══ MY SERVICES ══ -->
+    <div class="page" id="page-services">
+      <div class="page-header"><div><div class="page-title">My Services</div><div class="page-sub">Manage what you offer to students</div></div></div>
+
+      <!-- Service Portfolio -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">📦 Service Portfolio</div>
+        <div class="service-toggle active-svc" id="svc-resume">
+          <div style="flex:1;"><div style="font-size:14px;font-weight:700;">📄 Resume Review</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">Written feedback on student resumes</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <input class="form-input" type="text" value="₹299" style="width:80px;padding:6px 10px;text-align:center;" id="price-resume">
+            <span class="badge badge-teal">4.9★ · 8 reviews</span>
+            <div class="toggle-switch on" onclick="toggleService(this,'svc-resume')"></div>
+          </div>
+        </div>
+        <div class="service-toggle active-svc" id="svc-mock">
+          <div style="flex:1;"><div style="font-size:14px;font-weight:700;">🎤 Mock Interview</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">30-min video mock interview session</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <input class="form-input" type="text" value="₹499" style="width:80px;padding:6px 10px;text-align:center;" id="price-mock">
+            <span class="badge badge-teal">5.0★ · 4 reviews</span>
+            <div class="toggle-switch on" onclick="toggleService(this,'svc-mock')"></div>
+          </div>
+        </div>
+        <div class="service-toggle" id="svc-fix">
+          <div style="flex:1;"><div style="font-size:14px;font-weight:700;">🔍 Interview Correction</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">Debrief after failed interview</div></div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <input class="form-input" type="text" value="₹299" style="width:80px;padding:6px 10px;text-align:center;" id="price-fix">
+            <span class="badge badge-gray">Not offered yet</span>
+            <div class="toggle-switch" onclick="toggleService(this,'svc-fix')"></div>
+          </div>
+        </div>
+        <button class="btn btn-teal" style="margin-top:12px;" onclick="showToast('Service settings saved!','teal')">💾 Save Settings</button>
+      </div>
+
+      <!-- Pay It Forward -->
+      <div class="card" style="background:linear-gradient(135deg,#0D1B3E 0%,#1A2F5A 100%);border:none;">
+        <div style="display:flex;align-items:flex-start;gap:16px;">
+          <div style="font-size:36px;flex-shrink:0;">🙏</div>
+          <div style="flex:1;">
+            <div style="font-size:16px;font-weight:800;color:white;margin-bottom:6px;">Pay It Forward</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.6);font-family:'Inter',sans-serif;margin-bottom:14px;line-height:1.7;">Offer your next session free to a student who can't afford it. Your generosity builds the Colyx community.</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="btn btn-teal btn-sm" onclick="showToast('Pay It Forward activated! Next student gets a free session 🙏','teal')">🎁 Activate Pay It Forward</button>
+              <span class="badge" style="background:rgba(0,201,167,0.2);color:var(--teal);align-self:center;">You've done this 5 times!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ BOOKINGS ══ -->
+    <div class="page" id="page-bookings">
+      <div class="page-header"><div><div class="page-title">Bookings & Requests</div><div class="page-sub">2 pending · 12 completed</div></div></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('bk-pending','bk-tabs',this)">Pending <span style="background:var(--warning);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">2</span></button>
+        <button class="tab-btn" onclick="switchTab('bk-upcoming','bk-tabs',this)">Upcoming</button>
+        <button class="tab-btn" onclick="switchTab('bk-completed','bk-tabs',this)">Completed</button>
+      </div>
+      <div id="bk-tabs">
+        <div id="bk-pending">
+          <div class="booking-req" style="border:1.5px solid var(--warning);background:white;">
+            <div class="booking-icon">🎤</div>
+            <div class="booking-info"><div class="booking-title">Mock Interview — Rahul Kumar</div><div class="booking-meta">Requested: April 20 · 4:00 PM · ₹499 · CSE 3rd Year</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-teal btn-sm" onclick="showToast('Mock interview booking accepted!','teal')">✓ Accept</button><button class="btn btn-outline btn-sm" onclick="openModal('modal-reschedule')">Reschedule</button><button class="btn btn-danger btn-sm">Decline</button></div>
+          </div>
+          <div class="booking-req" style="border:1.5px solid var(--warning);background:white;">
+            <div class="booking-icon">📄</div>
+            <div class="booking-info"><div class="booking-title">Resume Review — Priya Sharma (FREE)</div><div class="booking-meta">Flexible timing · CSE 3rd Year · Attached resume</div></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-teal btn-sm" onclick="showToast('Resume review accepted!','teal')">✓ Accept</button><button class="btn btn-danger btn-sm">Decline</button></div>
+          </div>
+        </div>
+        <div id="bk-upcoming" style="display:none;">
+          <div class="booking-req" style="border:1.5px solid var(--teal);background:var(--teal-soft);">
+            <div class="booking-icon">🎤</div>
+            <div class="booking-info"><div class="booking-title">Mock Interview — Kiran Naidu</div><div class="booking-meta">April 18 · 5:00 PM · ₹499 · Video Call</div></div>
+            <span class="badge badge-teal">Confirmed</span>
+          </div>
+        </div>
+        <div id="bk-completed" style="display:none;">
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Student</th><th>Service</th><th>Date</th><th>Amount</th><th>Rating</th></tr></thead>
+                <tbody>
+                  <tr><td><div style="font-weight:600;">Kiran Naidu</div></td><td>Mock Interview</td><td>Apr 10</td><td>₹399</td><td><span style="color:#F59E0B;">★★★★★</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Sneha Patel</div></td><td>Resume Review (FREE)</td><td>Apr 5</td><td>—</td><td><span style="color:#F59E0B;">★★★★★</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Vikram Singh</div></td><td>Resume Review</td><td>Mar 28</td><td>₹239</td><td><span style="color:#F59E0B;">★★★★☆</span></td></tr>
+                  <tr><td><div style="font-weight:600;">Divya Sharma</div></td><td>Mock Interview</td><td>Mar 20</td><td>₹399</td><td><span style="color:#F59E0B;">★★★★★</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AVAILABILITY CALENDAR ══ -->
+    <div class="page" id="page-calendar">
+      <div class="page-header"><div><div class="page-title">Availability Calendar</div><div class="page-sub">Set when students can book you</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Availability saved!','teal')">💾 Save</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">April 2026</div>
+          <div class="calendar-grid">
+            <div class="cal-day-label">Sun</div><div class="cal-day-label">Mon</div><div class="cal-day-label">Tue</div><div class="cal-day-label">Wed</div><div class="cal-day-label">Thu</div><div class="cal-day-label">Fri</div><div class="cal-day-label">Sat</div>
+            <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day">1</div><div class="cal-day available">2</div><div class="cal-day">3</div><div class="cal-day available">4</div><div class="cal-day">5</div>
+            <div class="cal-day">6</div><div class="cal-day available">7</div><div class="cal-day">8</div><div class="cal-day available">9</div><div class="cal-day booked">10</div><div class="cal-day available">11</div><div class="cal-day">12</div>
+            <div class="cal-day">13</div><div class="cal-day available">14</div><div class="cal-day today">15</div><div class="cal-day available">16</div><div class="cal-day">17</div><div class="cal-day available">18</div><div class="cal-day booked">19</div>
+            <div class="cal-day">20</div><div class="cal-day available">21</div><div class="cal-day">22</div><div class="cal-day available">23</div><div class="cal-day">24</div><div class="cal-day available">25</div><div class="cal-day">26</div>
+            <div class="cal-day">27</div><div class="cal-day available">28</div><div class="cal-day">29</div><div class="cal-day available">30</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);"><div style="width:12px;height:12px;border-radius:3px;background:var(--teal-soft);border:1.5px solid var(--teal);"></div>Available</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);"><div style="width:12px;height:12px;border-radius:3px;background:var(--navy);"></div>Booked</div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray);"><div style="width:12px;height:12px;border-radius:3px;background:var(--cloud);border:2px solid var(--teal);"></div>Today</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Availability Settings</div>
+          <div class="form-group"><label class="form-label">Available Days</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;" id="days-container">
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--cloud);border:1.5px solid var(--gray-border);font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);" onclick="toggleDay(this)">Sun</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--teal-soft);border:1.5px solid var(--teal);font-size:12px;font-weight:600;cursor:pointer;color:var(--teal-dark);" onclick="toggleDay(this)">Mon</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--cloud);border:1.5px solid var(--gray-border);font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);" onclick="toggleDay(this)">Tue</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--teal-soft);border:1.5px solid var(--teal);font-size:12px;font-weight:600;cursor:pointer;color:var(--teal-dark);" onclick="toggleDay(this)">Wed</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--cloud);border:1.5px solid var(--gray-border);font-size:12px;font-weight:600;cursor:pointer;color:var(--gray);" onclick="toggleDay(this)">Thu</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--teal-soft);border:1.5px solid var(--teal);font-size:12px;font-weight:600;cursor:pointer;color:var(--teal-dark);" onclick="toggleDay(this)">Fri</div>
+              <div class="day-chip" style="padding:6px 14px;border-radius:8px;background:var(--teal-soft);border:1.5px solid var(--teal);font-size:12px;font-weight:600;cursor:pointer;color:var(--teal-dark);" onclick="toggleDay(this)">Sat</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">From Time</label><select class="form-select"><option>5:00 PM</option><option>4:00 PM</option><option>6:00 PM</option><option>9:00 AM</option></select></div>
+            <div class="form-group"><label class="form-label">To Time</label><select class="form-select"><option>8:00 PM</option><option>7:00 PM</option><option>9:00 PM</option><option>12:00 PM</option></select></div>
+          </div>
+          <div class="form-group"><label class="form-label">Max Sessions Per Week</label><select class="form-select"><option>2 sessions</option><option>3 sessions</option><option>5 sessions</option><option>Unlimited</option></select></div>
+          <div class="form-group"><label class="form-label">Buffer Between Sessions</label><select class="form-select"><option>30 minutes</option><option>1 hour</option><option>No buffer</option></select></div>
+          <div class="info-box">Students can only book sessions during your available slots. No double-bookings possible.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ EARNINGS ══ -->
+    <div class="page" id="page-earnings">
+      <div class="page-header"><div><div class="page-title">Earnings & Payouts</div><div class="page-sub">Track your income from mentoring sessions</div></div><button class="btn btn-outline btn-sm" onclick="showToast('Downloading statement...')">⬇ Download Statement</button></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num">₹4,500</div><div class="stat-label">Total Earned</div><div class="stat-change">All time</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-num">₹1,200</div><div class="stat-label">This Month</div><div class="stat-change">3 sessions</div></div>
+        <div class="stat-card"><div class="stat-icon">⏳</div><div class="stat-num">₹798</div><div class="stat-label">Pending Payout</div><div class="stat-change">Within 7 days</div></div>
+        <div class="stat-card"><div class="stat-icon">🙏</div><div class="stat-num">₹1,495</div><div class="stat-label">Free Sessions Value</div><div class="stat-change">Your seva contribution</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Earnings Breakdown</div>
+          <div class="earning-row"><span style="font-size:13px;font-weight:600;">📄 Resume Reviews</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">₹1,912</span></div>
+          <div class="earning-row"><span style="font-size:13px;font-weight:600;">🎤 Mock Interviews</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">₹2,394</span></div>
+          <div class="earning-row"><span style="font-size:13px;font-weight:600;">Colyx Commission (20%)</span><span style="font-size:13px;color:var(--gray);">-₹1,061</span></div>
+          <div class="earning-row" style="font-weight:700;"><span style="font-size:14px;">Net Earnings</span><span style="font-size:16px;color:var(--teal-dark);">₹3,245</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Payout History</div>
+          <div class="earning-row"><div><div style="font-size:13px;font-weight:600;">April 2026 Payout</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Expected Apr 20</div></div><span class="badge badge-yellow">Pending ₹798</span></div>
+          <div class="earning-row"><div><div style="font-size:13px;font-weight:600;">March 2026 Payout</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Mar 15, 2026</div></div><span class="badge badge-green">Paid ₹1,197</span></div>
+          <div class="earning-row"><div><div style="font-size:13px;font-weight:600;">February 2026 Payout</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Feb 12, 2026</div></div><span class="badge badge-green">Paid ₹798</span></div>
+          <div class="info-box" style="margin-top:12px;">Payouts processed within 7 working days after session completion.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MY PROFILE ══ -->
+    <div class="page" id="page-profile">
+      <div class="page-header"><div><div class="page-title">My Profile</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Profile saved!','teal')">💾 Save</button></div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+        <div>
+          <div class="card" style="text-align:center;">
+            <div style="width:72px;height:72px;border-radius:50%;background:var(--teal);color:var(--navy);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin:0 auto 12px;">RK</div>
+            <div style="font-size:16px;font-weight:800;color:var(--navy);">Rajesh Kumar</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:4px;font-family:'Inter',sans-serif;">Senior Software Engineer · TCS</div>
+            <div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">CSE 2021 · JNTU</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+              <span class="badge badge-teal" style="justify-content:center;">✓ Verified Alumni</span>
+              <span class="badge badge-orange" style="justify-content:center;">🏅 Colyx Seva Badge</span>
+              <span class="badge badge-navy" style="justify-content:center;">⭐ Active Mentor · 4.9★</span>
+            </div>
+            <button class="btn btn-outline" style="width:100%;margin-top:12px;font-size:12px;" onclick="showToast('Upload photo')">📷 Change Photo</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Basic Information</div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" type="text" value="Rajesh Kumar"></div>
+              <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" type="tel" value="+91 98765 43210"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" value="rajesh.k@gmail.com"></div>
+            <div class="form-group"><label class="form-label">LinkedIn</label><input class="form-input" type="url" value="https://linkedin.com/in/rajesh-kumar"></div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Professional Journey</div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:var(--cloud);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:13px;font-weight:700;">TCS</div><div style="font-size:12px;color:var(--teal-dark);font-weight:600;">Senior Software Engineer</div><div style="font-size:11px;color:var(--gray);margin-top:2px;font-family:'Inter',sans-serif;">2023 – Present · Hyderabad</div></div><span class="badge badge-teal">Current</span></div>
+              <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="font-size:13px;font-weight:700;">TCS</div><div style="font-size:12px;color:var(--gray);font-weight:600;">Software Engineer</div><div style="font-size:11px;color:var(--gray);margin-top:2px;font-family:'Inter',sans-serif;">2021 – 2023 · Hyderabad</div></div>
+            </div>
+            <button class="btn btn-outline" style="width:100%;margin-top:12px;font-size:12px;" onclick="openModal('modal-add-exp')">+ Add Experience</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MY REPUTATION ══ -->
+    <div class="page" id="page-reputation">
+      <div class="page-header"><div><div class="page-title">My Reputation</div><div class="page-sub">Reviews, ratings and mentor badges</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-num">4.9</div><div class="stat-label">Average Rating</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-num">12</div><div class="stat-label">Reviews Received</div></div>
+        <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-num">Active</div><div class="stat-label">Mentor Status</div></div>
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-num">5</div><div class="stat-label">Free Sessions Given</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Student Reviews</div>
+          <div class="review-card"><div class="review-text">"Rajesh's mock interview was exactly what I needed. He asked real TCS questions and gave honest feedback. Got placed at TCS a month later!"</div><div class="review-person"><div class="review-av">KN</div><div><div class="review-name">Kiran Naidu</div><div class="review-meta">CSE 4th Year · Mock Interview</div></div><div style="color:#F59E0B;margin-left:auto;">★★★★★</div></div></div>
+          <div class="review-card"><div class="review-text">"He reviewed my resume in detail — pointed out 8 mistakes I never noticed. Rewrote it and started getting more calls!"</div><div class="review-person"><div class="review-av">VS</div><div><div class="review-name">Vikram Singh</div><div class="review-meta">CSE 3rd Year · Resume Review</div></div><div style="color:#F59E0B;margin-left:auto;">★★★★★</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Mentor Badges</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:var(--teal-soft);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--teal);"><div style="font-size:28px;">✓</div><div><div style="font-size:14px;font-weight:700;color:var(--teal-dark);">Verified Alumni</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">College-verified profile</div></div></div>
+            <div style="background:var(--teal-soft);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid var(--teal);"><div style="font-size:28px;">⭐</div><div><div style="font-size:14px;font-weight:700;color:var(--teal-dark);">Active Mentor</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">5+ sessions · 4.0+ rating</div></div></div>
+            <div style="background:#FFF7ED;border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px solid #F59E0B;"><div style="font-size:28px;">🏅</div><div><div style="font-size:14px;font-weight:700;color:#C2410C;">Colyx Seva Badge</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">5+ free sessions given</div></div></div>
+            <div style="background:var(--cloud);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;border:1.5px dashed var(--gray-border);opacity:0.6;"><div style="font-size:28px;">🏆</div><div><div style="font-size:14px;font-weight:700;">Top Mentor</div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Need 20+ sessions · 4.5+ rating (8 more to go!)</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GIVE BACK ══ -->
+    <div class="page" id="page-giveback">
+      <div class="page-header"><div><div class="page-title">🙏 Give Back</div><div class="page-sub">Your seva impact on the Colyx community</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card" style="border-top-color:#F59E0B;"><div class="stat-icon">🙏</div><div class="stat-num">5</div><div class="stat-label">Free Sessions Given</div><div class="stat-change">Seva contribution</div></div>
+        <div class="stat-card" style="border-top-color:#F59E0B;"><div class="stat-icon">💝</div><div class="stat-num">₹1,495</div><div class="stat-label">Value of Free Help</div><div class="stat-change">What you gave for free</div></div>
+        <div class="stat-card" style="border-top-color:#F59E0B;"><div class="stat-icon">🎓</div><div class="stat-num">5</div><div class="stat-label">Students Helped Free</div></div>
+        <div class="stat-card" style="border-top-color:#F59E0B;"><div class="stat-icon">🏅</div><div class="stat-num">Seva</div><div class="stat-label">Badge Earned</div><div class="stat-change">Top 10% givers</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card" style="background:linear-gradient(135deg,#0D1B3E,#1A2F5A);border:none;">
+          <div style="font-size:32px;margin-bottom:12px;">🙏</div>
+          <div style="font-size:18px;font-weight:800;color:white;margin-bottom:8px;">Your Give Back Impact</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.6);font-family:'Inter',sans-serif;line-height:1.7;margin-bottom:16px;">You've helped 5 students completely free. 3 of them have since gotten placed. Your generosity changed their lives.</div>
+          <div style="padding:12px;background:rgba(0,201,167,0.15);border-radius:10px;border:1px solid rgba(0,201,167,0.3);">
+            <div style="font-size:13px;color:var(--teal);font-weight:700;">3 students placed after your free session 🎉</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Free Sessions History</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Sneha Patel — Resume Review</div><div style="font-size:11px;color:var(--gray);">April 5 · Free</div></div><span class="badge badge-green">Placed at TCS ✓</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Ravi Prasad — Mock Interview</div><div style="font-size:11px;color:var(--gray);">Mar 20 · Free</div></div><span class="badge badge-green">Placed at Wipro ✓</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Lakshmi Nair — Resume Review</div><div style="font-size:11px;color:var(--gray);">Mar 5 · Free</div></div><span class="badge badge-yellow">Job searching</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MY STORY ══ -->
+    <div class="page" id="page-story">
+      <div class="page-header"><div><div class="page-title">📖 My Story</div><div class="page-sub">Share your journey — inspire your juniors</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Story saved & published!','teal')">📢 Publish</button></div>
+      <div class="info-box">Your story is visible on your public Colyx profile. It inspires current students who are on the same path you once walked.</div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">From JNTU to TCS — My Journey</div>
+        <div class="form-group"><label class="form-label">Story Title</label><input class="form-input" type="text" value="From JNTU to TCS — How I cracked my first job"></div>
+        <div class="form-group"><label class="form-label">My Story</label><textarea class="form-textarea" style="min-height:200px;">I graduated from JNTU in 2021 with a CSE degree. The placement process was intense — I faced 4 rejections before TCS finally selected me.
+
+What helped me most was practicing with seniors who had already been through it. Mock interviews, resume reviews, honest feedback — all of that made the difference.
+
+That's exactly why I'm on Colyx. I want to be that senior for today's students. If my experience can save even one student from unnecessary rejection, it's worth it.
+
+To all juniors reading this: The journey is tough, but your college network is your biggest asset. Use it.</textarea></div>
+        <div class="form-group"><label class="form-label">Key Lesson (one line)</label><input class="form-input" type="text" value="Your college network is your biggest career asset — use it early."></div>
+        <div class="form-group"><label class="form-label">Visible to</label><select class="form-select"><option>All Colyx Users</option><option>JNTU Students & Alumni Only</option></select></div>
+      </div>
+    </div>
+
+    <!-- ══ NOTIFICATIONS ══ -->
+    <div class="page" id="page-notifications">
+      <div class="page-header"><div><div class="page-title">Notifications</div><div class="page-sub">3 unread</div></div><button class="btn btn-outline btn-sm" onclick="showToast('All marked as read')">✓ Mark all read</button></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--teal-soft);border-radius:14px;padding:16px;border:1px solid var(--teal);display:flex;gap:14px;"><div style="font-size:24px;">📋</div><div><div style="font-size:14px;font-weight:700;">New Booking Request</div><div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">Rahul Kumar wants to book a Mock Interview on April 20th at 4 PM.</div><div style="font-size:11px;color:var(--teal-dark);margin-top:6px;font-weight:600;">2 hours ago · Unread</div></div></div>
+        <div style="background:var(--teal-soft);border-radius:14px;padding:16px;border:1px solid var(--teal);display:flex;gap:14px;"><div style="font-size:24px;">⭐</div><div><div style="font-size:14px;font-weight:700;">New Review Received</div><div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">Kiran Naidu gave you 5 stars: "Best mock interview experience!"</div><div style="font-size:11px;color:var(--teal-dark);margin-top:6px;font-weight:600;">2 days ago · Unread</div></div></div>
+        <div style="background:var(--cloud);border-radius:14px;padding:16px;border:1px solid var(--gray-border);display:flex;gap:14px;"><div style="font-size:24px;">🏛️</div><div><div style="font-size:14px;font-weight:700;">Alumni Meet 2025 — Register Now</div><div style="font-size:13px;color:var(--gray);font-family:'Inter',sans-serif;margin-top:2px;">JNTU College Annual Alumni Meet — May 15th. Register before April 30th.</div><div style="font-size:11px;color:var(--gray);margin-top:6px;">1 week ago · From College</div></div></div>
+      </div>
+      <!-- Notification Preferences -->
+      <div class="card" style="margin-top:20px;">
+        <div class="card-title" style="margin-bottom:14px;">Notification Preferences</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Booking Requests</span><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Student Reviews</span><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">College Announcements</span><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Payout Notifications</span><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Smart Student Matches</span><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><div><div class="page-title">Settings</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Settings saved!','teal')">💾 Save</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Account Settings</div>
+          <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" type="tel" value="+91 98765 43210"></div>
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" value="rajesh.k@gmail.com"></div>
+          <div class="form-group"><label class="form-label">Bank Account (for payouts)</label><input class="form-input" type="text" placeholder="Account number" value="XXXX XXXX 4521"></div>
+          <div class="form-group"><label class="form-label">UPI ID</label><input class="form-input" type="text" value="rajesh.k@upi"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Privacy Settings</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Show in Alumni Directory</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Visible to all JNTU members</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Show Earnings Publicly</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Other alumni can see your earnings</div></div><input type="checkbox" style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Accept Direct Bookings</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Students can book without approval</div></div><input type="checkbox" style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Show My Story Publicly</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Visible to all students</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-reunion">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Organize Batch Reunion</div><div class="modal-close" onclick="closeModal('modal-reunion')">×</div></div>
+    <div class="form-group"><label class="form-label">Batch</label><input class="form-input" type="text" value="CSE 2021 Batch" readonly></div>
+    <div class="form-group"><label class="form-label">Reunion Title</label><input class="form-input" type="text" placeholder="e.g. 5 Year Reunion — CSE 2021"></div>
+    <div class="form-group"><label class="form-label">Proposed Date</label><input class="form-input" type="date"></div>
+    <div class="form-group"><label class="form-label">Venue / Mode</label><select class="form-select"><option>Online (Google Meet)</option><option>At College</option><option>Restaurant/Venue</option></select></div>
+    <div class="form-group"><label class="form-label">Message to Batchmates</label><textarea class="form-textarea" style="min-height:80px;" placeholder="Hey batch! It's been 5 years..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-reunion')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-reunion');showToast('Reunion invite sent to all 2021 batch alumni!','teal')">Send Invite to Batch</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reschedule">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Suggest New Time</div><div class="modal-close" onclick="closeModal('modal-reschedule')">×</div></div>
+    <div class="form-group"><label class="form-label">Suggest New Date</label><input class="form-input" type="date"></div>
+    <div class="form-group"><label class="form-label">Suggest New Time</label><select class="form-select"><option>4:00 PM</option><option>5:00 PM</option><option>6:00 PM</option><option>7:00 PM</option></select></div>
+    <div class="form-group"><label class="form-label">Message to Student</label><textarea class="form-textarea" style="min-height:70px;" placeholder="Can we reschedule to..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-reschedule')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-reschedule');showToast('Reschedule request sent!','teal')">Send Request</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-add-exp">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Experience</div><div class="modal-close" onclick="closeModal('modal-add-exp')">×</div></div>
+    <div class="form-group"><label class="form-label">Company *</label><input class="form-input" type="text" placeholder="Company name"></div>
+    <div class="form-group"><label class="form-label">Designation *</label><input class="form-input" type="text" placeholder="e.g. Software Engineer"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">From Year *</label><input class="form-input" type="number" placeholder="e.g. 2021"></div>
+      <div class="form-group"><label class="form-label">To Year</label><input class="form-input" type="number" placeholder="Leave blank if current"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Location</label><input class="form-input" type="text" placeholder="City, State"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-exp')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-exp');showToast('Experience added!','teal')">Add</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
+  const titles = { overview:'Home', college:'My College', 'college-alumni':'College Alumni Network', students:'Current Students', teachers:'My Teachers', services:'My Services', bookings:'Bookings & Requests', calendar:'Availability Calendar', earnings:'Earnings & Payouts', profile:'My Profile', reputation:'My Reputation', giveback:'Give Back', story:'My Story', notifications:'Notifications', settings:'Settings' };
+  document.getElementById('header-title').textContent = titles[id] || id;
+  closeSidebar();
+}
+function switchTab(showId, containerId, btn) {
+  document.getElementById(containerId).querySelectorAll(':scope > div').forEach(d => d.style.display = 'none');
+  document.getElementById(showId).style.display = 'block';
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleService(toggleEl, cardId) {
+  toggleEl.classList.toggle('on');
+  document.getElementById(cardId).classList.toggle('active-svc');
+}
+function toggleDay(el) {
+  const isActive = el.style.background.includes('230');
+  if (isActive) { el.style.background='var(--cloud)'; el.style.borderColor='var(--gray-border)'; el.style.color='var(--gray)'; }
+  else { el.style.background='var(--teal-soft)'; el.style.borderColor='var(--teal)'; el.style.color='var(--teal-dark)'; }
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); }));
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+function goHome() { window.location.href='colyx_landing_page.html'; }
+function showToast(msg, type='') { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(type?' '+type:'')+' show'; setTimeout(()=>t.classList.remove('show'),3000); }
+</script>
+</body>
+</html>

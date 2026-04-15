@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colyx — Founder Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0D1B3E; --navy-mid: #1A2F5A;
+  --teal: #00C9A7; --teal-dark: #009E84; --teal-soft: #E6FAF7;
+  --white: #FFFFFF; --cloud: #F7F8FA;
+  --gray: #64748B; --gray-border: #E2E8F0;
+  --sidebar-w: 240px;
+  --error: #EF4444; --warning: #F59E0B; --success: #10B981;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--cloud); color:var(--navy); overflow-x:hidden; }
+
+.sidebar { position:fixed; top:0; left:0; bottom:0; width:var(--sidebar-w); background:var(--navy); display:flex; flex-direction:column; z-index:100; transition:transform 0.3s; }
+.sidebar-logo { padding:20px 24px; border-bottom:1px solid rgba(255,255,255,0.07); }
+.logo-text { font-size:20px; font-weight:800; color:white; }
+.logo-text span { color:var(--teal); }
+.logo-sub { font-size:10px; color:rgba(255,255,255,0.3); margin-top:3px; font-family:'Inter',sans-serif; letter-spacing:1px; text-transform:uppercase; }
+.sidebar-user { padding:14px 24px; border-bottom:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; gap:10px; }
+.user-av { width:36px; height:36px; border-radius:50%; background:var(--teal); color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex-shrink:0; }
+.user-name { font-size:13px; font-weight:700; color:white; }
+.user-role { font-size:10px; color:rgba(255,255,255,0.4); margin-top:1px; font-family:'Inter',sans-serif; }
+.sidebar-nav { flex:1; overflow-y:auto; padding:12px 0; }
+.nav-section-label { font-size:10px; font-weight:700; color:rgba(255,255,255,0.25); text-transform:uppercase; letter-spacing:1.5px; padding:12px 24px 6px; }
+.nav-item { display:flex; align-items:center; gap:10px; padding:10px 24px; font-size:13px; font-weight:600; color:rgba(255,255,255,0.55); cursor:pointer; transition:all 0.2s; border-left:3px solid transparent; }
+.nav-item:hover { color:white; background:rgba(255,255,255,0.05); }
+.nav-item.active { color:white; background:rgba(0,201,167,0.1); border-left-color:var(--teal); }
+.nav-icon { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.nav-badge { margin-left:auto; background:var(--teal); color:var(--navy); font-size:10px; font-weight:800; padding:2px 7px; border-radius:10px; }
+.nav-badge.warn { background:var(--warning); color:white; }
+.nav-badge.red { background:var(--error); color:white; }
+.sidebar-footer { padding:16px 24px; border-top:1px solid rgba(255,255,255,0.07); }
+.logout-btn { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:rgba(255,255,255,0.4); cursor:pointer; transition:color 0.2s; }
+.logout-btn:hover { color:white; }
+
+.main { margin-left:var(--sidebar-w); min-height:100vh; display:flex; flex-direction:column; }
+.header { position:sticky; top:0; z-index:50; background:rgba(255,255,255,0.97); backdrop-filter:blur(12px); border-bottom:1px solid var(--gray-border); height:64px; display:flex; align-items:center; padding:0 32px; justify-content:space-between; }
+.header-title { font-size:18px; font-weight:800; color:var(--navy); }
+.header-right { display:flex; align-items:center; gap:14px; }
+.header-notif { width:38px; height:38px; border-radius:50%; background:var(--cloud); border:1px solid var(--gray-border); display:flex; align-items:center; justify-content:center; font-size:16px; cursor:pointer; position:relative; transition:all 0.2s; }
+.header-notif:hover { background:var(--teal-soft); border-color:var(--teal); }
+.notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:var(--teal); border-radius:50%; border:2px solid white; }
+.header-av { width:38px; height:38px; border-radius:50%; background:var(--teal); color:var(--navy); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; cursor:pointer; }
+.mob-menu-btn { display:none; cursor:pointer; font-size:22px; }
+
+.content { padding:28px 32px; flex:1; }
+.page { display:none; }
+.page.active { display:block; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+.page-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.page-title { font-size:22px; font-weight:800; color:var(--navy); letter-spacing:-0.5px; }
+.page-sub { font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.btn { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; padding:9px 18px; border-radius:9px; border:none; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all 0.2s; text-decoration:none; }
+.btn-navy { background:var(--navy); color:white; }
+.btn-navy:hover { background:var(--navy-mid); }
+.btn-teal { background:var(--teal); color:var(--navy); }
+.btn-teal:hover { background:var(--teal-dark); color:white; }
+.btn-outline { background:white; color:var(--navy); border:1.5px solid var(--gray-border); }
+.btn-outline:hover { border-color:var(--teal); color:var(--teal-dark); }
+.btn-sm { padding:6px 14px; font-size:12px; }
+.btn-danger { background:#FEF2F2; color:var(--error); border:1px solid #FEE2E2; }
+.btn-danger:hover { background:var(--error); color:white; }
+.btn-success { background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; }
+.btn-success:hover { background:var(--success); color:white; }
+
+.stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+.stat-card { background:white; border-radius:16px; padding:20px; border-top:3px solid var(--teal); box-shadow:0 2px 8px rgba(0,0,0,0.04); transition:transform 0.2s; }
+.stat-card:hover { transform:translateY(-2px); }
+.stat-icon { font-size:22px; margin-bottom:8px; }
+.stat-num { font-size:26px; font-weight:800; color:var(--navy); letter-spacing:-1px; line-height:1; }
+.stat-label { font-size:12px; color:var(--gray); margin-top:4px; font-family:'Inter',sans-serif; }
+.stat-change { font-size:11px; font-weight:600; margin-top:6px; }
+.stat-change.up { color:var(--success); }
+.stat-change.down { color:var(--error); }
+.stat-change.neutral { color:var(--warning); }
+
+.card { background:white; border-radius:16px; padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.04); margin-bottom:20px; }
+.card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+.card-title { font-size:15px; font-weight:700; color:var(--navy); }
+.card-sub { font-size:12px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.badge { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+.badge-green { background:#DCFCE7; color:#166534; }
+.badge-yellow { background:#FEF9C3; color:#854D0E; }
+.badge-teal { background:var(--teal-soft); color:var(--teal-dark); }
+.badge-gray { background:var(--cloud); color:var(--gray); }
+.badge-blue { background:#DBEAFE; color:#1E40AF; }
+.badge-navy { background:#EEF2F8; color:var(--navy); }
+.badge-red { background:#FEE2E2; color:#991B1B; }
+.badge-orange { background:#FFF7ED; color:#C2410C; }
+
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; }
+th { font-size:11px; font-weight:700; color:var(--gray); text-transform:uppercase; letter-spacing:0.5px; padding:10px 14px; text-align:left; border-bottom:2px solid var(--gray-border); white-space:nowrap; }
+td { font-size:13px; color:var(--navy); padding:12px 14px; border-bottom:1px solid var(--gray-border); vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--cloud); }
+.td-sub { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.tab-bar { display:flex; gap:4px; background:var(--cloud); border-radius:12px; padding:4px; margin-bottom:20px; flex-wrap:wrap; }
+.tab-btn { flex:1; min-width:80px; padding:8px 12px; text-align:center; font-size:13px; font-weight:600; color:var(--gray); border-radius:9px; cursor:pointer; transition:all 0.2s; border:none; background:none; font-family:'Plus Jakarta Sans',sans-serif; }
+.tab-btn.active { background:white; color:var(--navy); box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+
+.filter-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+.search-bar { display:flex; align-items:center; gap:8px; background:white; border:1.5px solid var(--gray-border); border-radius:10px; padding:8px 14px; }
+.search-bar:focus-within { border-color:var(--teal); }
+.search-bar input { border:none; background:none; outline:none; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); width:180px; }
+.filter-select { padding:8px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:white; outline:none; cursor:pointer; }
+
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; font-weight:700; color:var(--navy); margin-bottom:5px; display:block; }
+.form-input { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; transition:all 0.2s; }
+.form-input:focus { border-color:var(--teal); background:white; }
+.form-select { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; cursor:pointer; }
+.form-textarea { width:100%; padding:10px 14px; border:1.5px solid var(--gray-border); border-radius:9px; font-size:13px; font-family:'Plus Jakarta Sans',sans-serif; color:var(--navy); background:var(--cloud); outline:none; resize:vertical; min-height:90px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.open { display:flex; }
+.modal { background:white; border-radius:20px; padding:28px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; animation:fadeIn 0.25s ease; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+.modal-title { font-size:18px; font-weight:800; color:var(--navy); }
+.modal-close { font-size:22px; cursor:pointer; color:var(--gray); line-height:1; }
+.modal-footer { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
+
+.toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; z-index:1000; transform:translateY(80px); opacity:0; transition:all 0.3s; }
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.teal { background:var(--teal); color:var(--navy); }
+
+.activity-item { display:flex; align-items:flex-start; gap:12px; margin-bottom:12px; }
+.activity-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; background:var(--teal-soft); }
+.activity-text { font-size:13px; color:var(--navy); font-weight:500; line-height:1.5; }
+.activity-time { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+.progress-track { height:8px; background:var(--gray-border); border-radius:4px; overflow:hidden; margin:6px 0; }
+.progress-fill { height:100%; background:var(--teal); border-radius:4px; transition:width 1s ease; }
+.progress-fill.orange { background:var(--warning); }
+.progress-fill.red { background:var(--error); }
+
+.info-box { background:var(--cloud); border-left:3px solid var(--teal); border-radius:0 10px 10px 0; padding:12px 16px; margin:12px 0; font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; line-height:1.6; }
+
+/* Pipeline stages */
+.pipeline-wrap { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:20px; }
+.pipeline-stage { background:white; border-radius:14px; padding:16px; border-top:3px solid var(--teal); }
+.pipeline-stage-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--gray); margin-bottom:8px; }
+.pipeline-count { font-size:28px; font-weight:800; color:var(--navy); line-height:1; }
+.pipeline-sub { font-size:11px; color:var(--gray); margin-top:4px; font-family:'Inter',sans-serif; }
+.pipeline-item { background:var(--cloud); border-radius:10px; padding:10px 12px; margin-top:8px; cursor:pointer; transition:all 0.2s; border:1px solid var(--gray-border); }
+.pipeline-item:hover { border-color:var(--teal); background:var(--teal-soft); }
+.pipeline-item-name { font-size:12px; font-weight:700; color:var(--navy); }
+.pipeline-item-sub { font-size:10px; color:var(--gray); margin-top:2px; font-family:'Inter',sans-serif; }
+
+/* Founders club ring */
+.founders-ring { position:relative; width:120px; height:120px; flex-shrink:0; }
+.founders-ring svg { transform:rotate(-90deg); }
+.ring-bg { fill:none; stroke:var(--gray-border); stroke-width:10; }
+.ring-fill { fill:none; stroke:var(--teal); stroke-width:10; stroke-linecap:round; }
+.ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.ring-num { font-size:26px; font-weight:800; color:var(--navy); line-height:1; }
+.ring-label { font-size:10px; color:var(--gray); font-family:'Inter',sans-serif; }
+
+/* Health indicator */
+.health-item { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-radius:10px; margin-bottom:8px; }
+.health-item.ok { background:#DCFCE7; }
+.health-item.warn { background:#FEF9C3; }
+.health-item.bad { background:#FEE2E2; }
+.health-label { font-size:13px; font-weight:600; }
+.health-item.ok .health-label { color:#166534; }
+.health-item.warn .health-label { color:#854D0E; }
+.health-item.bad .health-label { color:#991B1B; }
+.health-val { font-size:12px; font-family:'Inter',sans-serif; }
+.health-item.ok .health-val { color:#166534; }
+.health-item.warn .health-val { color:#854D0E; }
+.health-item.bad .health-val { color:#991B1B; }
+
+/* Metric bar */
+.metric-row { margin-bottom:14px; }
+.metric-header { display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px; }
+.metric-label { font-weight:600; color:var(--navy); }
+.metric-val { color:var(--teal-dark); font-weight:700; }
+
+/* Ticket card */
+.ticket-card { background:var(--cloud); border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px; border:1.5px solid var(--gray-border); cursor:pointer; transition:all 0.2s; }
+.ticket-card:hover { border-color:var(--teal); }
+.ticket-icon { font-size:22px; flex-shrink:0; }
+.ticket-title { font-size:13px; font-weight:700; color:var(--navy); }
+.ticket-meta { font-size:11px; color:var(--gray); font-family:'Inter',sans-serif; margin-top:2px; }
+
+/* Revenue card */
+.rev-row { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--gray-border); }
+.rev-row:last-child { border-bottom:none; }
+.rev-label { font-size:13px; color:var(--gray); font-family:'Inter',sans-serif; }
+.rev-val { font-size:14px; font-weight:700; color:var(--navy); }
+.rev-val.teal { color:var(--teal-dark); }
+
+.sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:99; }
+.sidebar-overlay.open { display:block; }
+
+@media(max-width:768px) {
+
+  /* ══ MOBILE GRID FIX ══ */
+  .content [style*="grid-template-columns:1fr 1fr"],
+  .content [style*="grid-template-columns: 1fr 1fr"],
+  .content [style*="grid-template-columns:2fr 1fr"],
+  .content [style*="grid-template-columns: 2fr 1fr"],
+  .content [style*="grid-template-columns:1fr 2fr"],
+  .content [style*="grid-template-columns: 1fr 2fr"] {
+    grid-template-columns: 1fr !important;
+  }
+  .pipeline-wrap { grid-template-columns: 1fr 1fr !important; }
+  .mentor-grid { grid-template-columns: 1fr !important; }
+  .inspired-card { min-width: 0; }
+  [style*="grid-template-columns:repeat(4"] { grid-template-columns: 1fr 1fr !important; }
+  [style*="grid-template-columns:repeat(3"] { grid-template-columns: 1fr !important; }
+
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .mob-menu-btn { display:block; }
+  .header { padding:0 20px; }
+  .content { padding:20px 16px; }
+  .stats-grid { grid-template-columns:1fr 1fr; }
+  .pipeline-wrap { grid-template-columns:1fr 1fr; }
+  .form-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">Col<span>yx</span></div>
+    <div class="logo-sub">Founder · Super Admin</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="user-av">K</div>
+    <div>
+      <div class="user-name">Krishna</div>
+      <div class="user-role">Founder · Medhaara Innovations</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <div class="nav-item active" onclick="showPage('overview',this)"><span class="nav-icon">🏠</span>Overview</div>
+    <div class="nav-item" onclick="showPage('health',this)"><span class="nav-icon">💚</span>Platform Health<span class="nav-badge warn">1</span></div>
+
+    <div class="nav-section-label">Sales & Growth</div>
+    <div class="nav-item" onclick="showPage('pipeline',this)"><span class="nav-icon">🎯</span>Onboarding Pipeline</div>
+    <div class="nav-item" onclick="showPage('founders',this)"><span class="nav-icon">🏅</span>Founder's Club</div>
+    <div class="nav-item" onclick="showPage('growth',this)"><span class="nav-icon">📈</span>Growth Metrics</div>
+
+    <div class="nav-section-label">Platform</div>
+    <div class="nav-item" onclick="showPage('colleges',this)"><span class="nav-icon">🏛️</span>All Colleges</div>
+    <div class="nav-item" onclick="showPage('users',this)"><span class="nav-icon">👥</span>All Users</div>
+    <div class="nav-item" onclick="showPage('marketplace',this)"><span class="nav-icon">🎯</span>Marketplace</div>
+
+    <div class="nav-section-label">Finance</div>
+    <div class="nav-item" onclick="showPage('revenue',this)"><span class="nav-icon">💰</span>Revenue & ARR</div>
+    <div class="nav-item" onclick="showPage('payouts',this)"><span class="nav-icon">💸</span>Alumni Payouts<span class="nav-badge warn">3</span></div>
+    <div class="nav-item" onclick="showPage('forecast',this)"><span class="nav-icon">🔮</span>Revenue Forecast</div>
+
+    <div class="nav-section-label">Operations</div>
+    <div class="nav-item" onclick="showPage('support',this)"><span class="nav-icon">🎧</span>Support Tickets<span class="nav-badge red">4</span></div>
+    <div class="nav-item" onclick="showPage('moderation',this)"><span class="nav-icon">🛡️</span>Content Moderation<span class="nav-badge warn">2</span></div>
+    <div class="nav-item" onclick="showPage('announcements',this)"><span class="nav-icon">📢</span>Announcements</div>
+
+    <div class="nav-section-label">Settings</div>
+    <div class="nav-item" onclick="showPage('settings',this)"><span class="nav-icon">⚙️</span>Platform Settings</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="logout-btn" onclick="window.location.href='colyx_login.html'"><span>🚪</span>Logout</div>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="mob-menu-btn" onclick="openSidebar()">☰</div>
+      <div class="header-title" id="header-title">Overview</div>
+    </div>
+    <div class="header-right">
+      <div class="header-notif">🔔<div class="notif-dot"></div></div>
+      <div class="header-av">K</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══ OVERVIEW ══ -->
+    <div class="page active" id="page-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Krishna! 👋</div>
+          <div class="page-sub">Colyx Platform · Medhaara Innovations Pvt Ltd · Wednesday, April 15, 2026</div>
+        </div>
+        <button class="btn btn-navy" onclick="showPage('announcements',null)">📢 Send Announcement</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🏛️</div><div class="stat-num">67</div><div class="stat-label">Colleges On Platform</div><div class="stat-change up">↑ 3 this week</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-num">52,480</div><div class="stat-label">Total Users</div><div class="stat-change up">↑ 420 this week</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num">₹94.2L</div><div class="stat-label">ARR (Annual Run Rate)</div><div class="stat-change up">↑ ₹4.2L this month</div></div>
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-num">1,240</div><div class="stat-label">Services Completed</div><div class="stat-change up">↑ 48 this week</div></div>
+      </div>
+
+      <!-- Secondary Stats -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-num">38,420</div><div class="stat-label">Students</div><div class="stat-change up">↑ 312 this week</div></div>
+        <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-num">9,840</div><div class="stat-label">Alumni</div><div class="stat-change up">↑ 86 this week</div></div>
+        <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-num">4,220</div><div class="stat-label">Teachers</div><div class="stat-change up">↑ 22 this week</div></div>
+        <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-num">₹18,640</div><div class="stat-label">Marketplace Revenue (MTD)</div><div class="stat-change up">↑ ₹2,400 this week</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Pipeline Summary -->
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">🎯 Sales Pipeline Today</div></div><button class="btn btn-outline btn-sm" onclick="showPage('pipeline',null)">View Full →</button></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">🔵 Contacted</span><span class="badge badge-blue">12 colleges</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">🟡 Demo Scheduled</span><span class="badge badge-yellow">5 colleges</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">🟠 Demo Done</span><span class="badge badge-orange">3 colleges</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">🟢 Payment Pending</span><span class="badge badge-green">2 colleges</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--teal-soft);border-radius:10px;border:1px solid var(--teal);"><span style="font-size:13px;font-weight:700;color:var(--teal-dark);">✅ Live This Week</span><span class="badge badge-teal">3 colleges</span></div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Activity</div></div>
+          <div class="activity-item"><div class="activity-dot">🏛️</div><div><div class="activity-text">CVR College of Engineering went live — 1,200 students</div><div class="activity-time">2 hours ago · ₹2,83,200 revenue</div></div></div>
+          <div class="activity-item"><div class="activity-dot">💰</div><div><div class="activity-text">3 alumni payouts processed — ₹2,840 total</div><div class="activity-time">4 hours ago</div></div></div>
+          <div class="activity-item"><div class="activity-dot">🎯</div><div><div class="activity-text">48 services completed this week — ₹9,600 commission</div><div class="activity-time">Today</div></div></div>
+          <div class="activity-item"><div class="activity-dot">🎧</div><div><div class="activity-text">4 support tickets open — 2 urgent</div><div class="activity-time">Check now</div></div></div>
+          <div class="activity-item"><div class="activity-dot">📢</div><div><div class="activity-text">Vasavi College demo scheduled for tomorrow 11 AM</div><div class="activity-time">Tomorrow</div></div></div>
+        </div>
+      </div>
+
+      <!-- Founders Club Quick View -->
+      <div class="card" style="background:linear-gradient(135deg,#0D1B3E 0%,#1A2F5A 100%);border:none;">
+        <div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div class="founders-ring">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50"/>
+              <circle class="ring-fill" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="104"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num" style="color:white;">67</div>
+              <div class="ring-label" style="color:rgba(255,255,255,0.5);">/ 100</div>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--teal);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">🏅 Founder's Club Progress</div>
+            <div style="font-size:24px;font-weight:800;color:white;margin-bottom:4px;">67 of 100 slots filled</div>
+            <div style="font-size:14px;color:rgba(255,255,255,0.5);font-family:'Inter',sans-serif;margin-bottom:16px;">33 slots remaining at ₹200/student · After that: ₹300/student</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <div style="padding:10px 16px;background:rgba(0,201,167,0.15);border-radius:10px;border:1px solid rgba(0,201,167,0.3);"><div style="font-size:11px;color:var(--teal);font-weight:600;">Revenue @ ₹200</div><div style="font-size:16px;font-weight:800;color:white;">₹94.2L ARR</div></div>
+              <div style="padding:10px 16px;background:rgba(255,255,255,0.05);border-radius:10px;border:1px solid rgba(255,255,255,0.1);"><div style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;">If 100 colleges @ ₹300</div><div style="font-size:16px;font-weight:800;color:white;">~₹2.1Cr ARR</div></div>
+            </div>
+          </div>
+          <button class="btn btn-teal" onclick="showPage('founders',null)">View Tracker →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PLATFORM HEALTH ══ -->
+    <div class="page" id="page-health">
+      <div class="page-header"><div><div class="page-title">Platform Health</div><div class="page-sub">Real-time system status and issue monitoring</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Health report refreshed','teal')">🔄 Refresh</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">System Status</div>
+          <div class="health-item ok"><div><div class="health-label">🌐 Website (colyx.in)</div><div class="health-val">Response: 142ms · Uptime: 99.98%</div></div><span class="badge badge-green">Healthy</span></div>
+          <div class="health-item ok"><div><div class="health-label">🔐 Authentication (OTP)</div><div class="health-val">MSG91 · Success rate: 98.2%</div></div><span class="badge badge-green">Healthy</span></div>
+          <div class="health-item ok"><div><div class="health-label">💳 Payments (Razorpay)</div><div class="health-val">Success rate: 97.8% · Last: 2 mins ago</div></div><span class="badge badge-green">Healthy</span></div>
+          <div class="health-item warn"><div><div class="health-label">📧 Email (SendGrid)</div><div class="health-val">Delivery rate: 94.1% · Some delays</div></div><span class="badge badge-yellow">Degraded</span></div>
+          <div class="health-item ok"><div><div class="health-label">☁️ Storage (AWS S3)</div><div class="health-val">All buckets healthy · 42GB used</div></div><span class="badge badge-green">Healthy</span></div>
+          <div class="health-item ok"><div><div class="health-label">🗄️ Database (PostgreSQL)</div><div class="health-val">Query time: 12ms avg · Connections: 42/200</div></div><span class="badge badge-green">Healthy</span></div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Today's Activity</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Daily Active Users</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">3,240</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">New Registrations</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">84</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">Services Booked</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">12</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--cloud);border-radius:10px;"><span style="font-size:13px;font-weight:600;">OTP Requests</span><span style="font-size:14px;font-weight:800;color:var(--teal-dark);">342</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:#FEF9C3;border-radius:10px;"><span style="font-size:13px;font-weight:600;">Failed Payments</span><span style="font-size:14px;font-weight:800;color:var(--warning);">3</span></div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:#FEF9C3;border-radius:10px;"><span style="font-size:13px;font-weight:600;">Email Failures</span><span style="font-size:14px;font-weight:800;color:var(--warning);">8</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Reported Bugs</div>
+            <div style="background:#FEE2E2;border-radius:12px;padding:14px;margin-bottom:8px;"><div style="font-size:13px;font-weight:700;color:#991B1B;">Email OTP not delivering on Airtel SIM</div><div style="font-size:11px;color:#991B1B;margin-top:4px;">Reported by 3 users · Today · High Priority</div></div>
+            <div style="background:#FEF9C3;border-radius:12px;padding:14px;"><div style="font-size:13px;font-weight:700;color:#854D0E;">Alumni profile photo upload timeout</div><div style="font-size:11px;color:#854D0E;margin-top:4px;">Reported by 1 user · Yesterday · Medium Priority</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PIPELINE ══ -->
+    <div class="page" id="page-pipeline">
+      <div class="page-header"><div><div class="page-title">College Onboarding Pipeline</div><div class="page-sub">Sales CRM — Track every college from contact to live</div></div><button class="btn btn-navy btn-sm" onclick="openModal('modal-add-lead')">+ Add Lead</button></div>
+      <div class="pipeline-wrap">
+        <div class="pipeline-stage" style="border-top-color:#94A3B8;">
+          <div class="pipeline-stage-label">🔵 Contacted</div>
+          <div class="pipeline-count">12</div>
+          <div class="pipeline-sub">colleges</div>
+          <div class="pipeline-item"><div class="pipeline-item-name">Malla Reddy Engineering</div><div class="pipeline-item-sub">Hyderabad · 2,400 intake · Apr 10</div></div>
+          <div class="pipeline-item"><div class="pipeline-item-name">Gokaraju Rangaraju Institute</div><div class="pipeline-item-sub">Hyderabad · 1,800 intake · Apr 12</div></div>
+          <div class="pipeline-item" style="text-align:center;color:var(--gray);font-size:12px;">+10 more</div>
+        </div>
+        <div class="pipeline-stage" style="border-top-color:var(--warning);">
+          <div class="pipeline-stage-label">🟡 Demo Scheduled</div>
+          <div class="pipeline-count">5</div>
+          <div class="pipeline-sub">colleges</div>
+          <div class="pipeline-item"><div class="pipeline-item-name">Vasavi College of Engineering</div><div class="pipeline-item-sub">Demo: Apr 16, 11 AM · 2,100 intake</div></div>
+          <div class="pipeline-item"><div class="pipeline-item-name">MLR Institute</div><div class="pipeline-item-sub">Demo: Apr 18, 3 PM · 1,600 intake</div></div>
+          <div class="pipeline-item" style="text-align:center;color:var(--gray);font-size:12px;">+3 more</div>
+        </div>
+        <div class="pipeline-stage" style="border-top-color:#F97316;">
+          <div class="pipeline-stage-label">🟠 Demo Done</div>
+          <div class="pipeline-count">3</div>
+          <div class="pipeline-sub">colleges</div>
+          <div class="pipeline-item"><div class="pipeline-item-name">CBIT Hyderabad</div><div class="pipeline-item-sub">Demo done Apr 12 · Follow-up pending</div></div>
+          <div class="pipeline-item"><div class="pipeline-item-name">Sreyas Institute</div><div class="pipeline-item-sub">Demo done Apr 11 · Interested</div></div>
+        </div>
+        <div class="pipeline-stage" style="border-top-color:var(--success);">
+          <div class="pipeline-stage-label">💳 Payment Pending</div>
+          <div class="pipeline-count">2</div>
+          <div class="pipeline-sub">colleges</div>
+          <div class="pipeline-item" style="background:var(--teal-soft);border-color:var(--teal);"><div class="pipeline-item-name">Anurag University</div><div class="pipeline-item-sub">Invoice sent · ₹3.6L · Apr 14</div></div>
+          <div class="pipeline-item" style="background:var(--teal-soft);border-color:var(--teal);"><div class="pipeline-item-name">St. Martin's Engineering</div><div class="pipeline-item-sub">Agreement signed · ₹2.8L</div></div>
+        </div>
+        <div class="pipeline-stage" style="border-top-color:var(--teal);">
+          <div class="pipeline-stage-label">✅ Live</div>
+          <div class="pipeline-count">67</div>
+          <div class="pipeline-sub">colleges active</div>
+          <div class="pipeline-item" style="background:var(--teal-soft);border-color:var(--teal);"><div class="pipeline-item-name">CVR College ← New!</div><div class="pipeline-item-sub">Live since today · 1,200 students</div></div>
+          <div class="pipeline-item" style="background:var(--teal-soft);border-color:var(--teal);"><div class="pipeline-item-name">JNTU Hyderabad</div><div class="pipeline-item-sub">Since Jan 2026 · 4,200 students</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Pipeline Leads</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>College</th><th>City</th><th>Intake</th><th>Expected Revenue</th><th>Stage</th><th>Last Contact</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><div style="font-weight:600;">Vasavi College of Engineering</div></td><td>Hyderabad</td><td>2,100</td><td>₹4.96L</td><td><span class="badge badge-yellow">Demo Scheduled</span></td><td>Apr 12</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Stage updated!','teal')">Update Stage</button><button class="btn btn-outline btn-sm">Notes</button></div></td></tr>
+              <tr><td><div style="font-weight:600;">CBIT Hyderabad</div></td><td>Hyderabad</td><td>3,200</td><td>₹7.55L</td><td><span class="badge badge-orange">Demo Done</span></td><td>Apr 12</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Stage updated!','teal')">Update Stage</button><button class="btn btn-outline btn-sm">Notes</button></div></td></tr>
+              <tr><td><div style="font-weight:600;">Anurag University</div></td><td>Hyderabad</td><td>1,800</td><td>₹4.25L</td><td><span class="badge badge-green">Payment Pending</span></td><td>Apr 14</td><td><div style="display:flex;gap:6px;"><button class="btn btn-teal btn-sm" onclick="showToast('Reminder sent!','teal')">Send Reminder</button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FOUNDERS CLUB ══ -->
+    <div class="page" id="page-founders">
+      <div class="page-header"><div><div class="page-title">🏅 Founder's Club Tracker</div><div class="page-sub">First 100 colleges at ₹200/student · After that ₹300/student</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;">
+        <div class="card" style="text-align:center;">
+          <div class="founders-ring" style="margin:0 auto 20px;">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50"/>
+              <circle class="ring-fill" cx="60" cy="60" r="50" stroke-dasharray="314" stroke-dashoffset="104"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-num">67</div>
+              <div class="ring-label">/ 100</div>
+            </div>
+          </div>
+          <div style="font-size:16px;font-weight:800;color:var(--navy);margin-bottom:4px;">67 Slots Filled</div>
+          <div style="font-size:14px;color:var(--teal-dark);font-weight:700;margin-bottom:16px;">33 Slots Remaining</div>
+          <div style="background:var(--teal-soft);border-radius:12px;padding:14px;margin-bottom:10px;"><div style="font-size:11px;color:var(--gray);">Revenue if 100 @ ₹200</div><div style="font-size:18px;font-weight:800;color:var(--navy);">~₹1.4Cr ARR</div></div>
+          <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="font-size:11px;color:var(--gray);">Revenue if next 100 @ ₹300</div><div style="font-size:18px;font-weight:800;color:var(--navy);">+₹2.1Cr ARR</div></div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Founder's Club Members (67)</div><button class="btn btn-outline btn-sm" onclick="showToast('Downloading list...')">⬇ Export</button></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>#</th><th>College</th><th>Intake</th><th>Rate</th><th>Annual Rev</th><th>Joined</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:700;color:var(--teal-dark);">1</td><td><div style="font-weight:600;">JNTU College of Engineering</div></td><td>4,200</td><td style="color:var(--teal-dark);font-weight:700;">₹200</td><td>₹9.91L</td><td>Jan 2026</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal-dark);">2</td><td><div style="font-weight:600;">Osmania University CE</div></td><td>3,800</td><td style="color:var(--teal-dark);font-weight:700;">₹200</td><td>₹8.97L</td><td>Jan 2026</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal-dark);">3</td><td><div style="font-weight:600;">VNR Vignana Jyothi</div></td><td>2,800</td><td style="color:var(--teal-dark);font-weight:700;">₹200</td><td>₹6.61L</td><td>Feb 2026</td></tr>
+                  <tr><td style="font-weight:700;color:var(--teal-dark);">67</td><td><div style="font-weight:600;">CVR College of Engineering</div></td><td>1,200</td><td style="color:var(--teal-dark);font-weight:700;">₹200</td><td>₹2.83L</td><td>Today</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="info-box">Once 100 colleges join, all new colleges automatically pay ₹300/student. Existing Founder's Club members keep ₹200 rate forever.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GROWTH METRICS ══ -->
+    <div class="page" id="page-growth">
+      <div class="page-header"><div><div class="page-title">Growth Metrics</div><div class="page-sub">Week on week platform growth</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-num">+3</div><div class="stat-label">New Colleges This Week</div><div class="stat-change up">Best week so far!</div></div>
+        <div class="stat-card"><div class="stat-icon">👤</div><div class="stat-num">+420</div><div class="stat-label">New Users This Week</div><div class="stat-change up">↑ 18% vs last week</div></div>
+        <div class="stat-card"><div class="stat-icon">🔄</div><div class="stat-num">94%</div><div class="stat-label">College Renewal Rate</div><div class="stat-change up">Target: 85% ✓</div></div>
+        <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-num">4.7</div><div class="stat-label">Platform NPS Score</div><div class="stat-change up">↑ 0.2 this month</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">User Registration Rate</div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">Students</span><span class="metric-val">78% of intake registered</span></div><div class="progress-track"><div class="progress-fill" style="width:78%"></div></div></div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">Teachers</span><span class="metric-val">82% registered</span></div><div class="progress-track"><div class="progress-fill" style="width:82%"></div></div></div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">Alumni</span><span class="metric-val">62% activated</span></div><div class="progress-track"><div class="progress-fill" style="width:62%"></div></div></div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">Alumni offering services</span><span class="metric-val">24% of alumni</span></div><div class="progress-track"><div class="progress-fill" style="width:24%"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;">Monthly College Additions</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Jan</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:24%"></div></div><span style="font-size:12px;font-weight:700;width:24px;">24</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Feb</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:32%"></div></div><span style="font-size:12px;font-weight:700;width:24px;">32</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Mar</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:48%"></div></div><span style="font-size:12px;font-weight:700;width:24px;">48</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--teal-dark);font-weight:700;width:40px;">Apr</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:67%"></div></div><span style="font-size:12px;font-weight:800;color:var(--teal-dark);width:24px;">67</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALL COLLEGES ══ -->
+    <div class="page" id="page-colleges">
+      <div class="page-header"><div><div class="page-title">All Colleges</div><div class="page-sub">67 colleges · Telangana + AP</div></div><button class="btn btn-outline btn-sm" onclick="showToast('Downloading report...')">⬇ Export</button></div>
+      <div class="filter-bar">
+        <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search college..."></div>
+        <select class="filter-select"><option>All States</option><option>Telangana</option><option>Andhra Pradesh</option></select>
+        <select class="filter-select"><option>All Status</option><option>Active</option><option>Expired</option><option>Pending</option></select>
+        <select class="filter-select"><option>All Plans</option><option>Founder's Club (₹200)</option><option>Standard (₹300)</option></select>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>College</th><th>City</th><th>Intake</th><th>Plan</th><th>Annual Rev</th><th>Students</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><div style="font-weight:600;">JNTU College of Engineering</div><div class="td-sub">jntuceh.ac.in</div></td><td>Hyderabad</td><td>4,200</td><td><span class="badge badge-teal">₹200</span></td><td style="font-weight:700;color:var(--teal-dark);">₹9.91L</td><td>3,840 / 4,200</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td><div style="font-weight:600;">VNR Vignana Jyothi</div><div class="td-sub">vnrvjiet.ac.in</div></td><td>Hyderabad</td><td>2,800</td><td><span class="badge badge-teal">₹200</span></td><td style="font-weight:700;color:var(--teal-dark);">₹6.61L</td><td>2,340 / 2,800</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td><div style="font-weight:600;">CVR College of Engineering</div><div class="td-sub">cvrce.edu.in</div></td><td>Hyderabad</td><td>1,200</td><td><span class="badge badge-teal">₹200</span></td><td style="font-weight:700;color:var(--teal-dark);">₹2.83L</td><td>124 / 1,200</td><td><span class="badge badge-yellow">Just Live</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              <tr><td><div style="font-weight:600;">Andhra University CE</div><div class="td-sub">andhrauniversity.edu.in</div></td><td>Visakhapatnam</td><td>3,600</td><td><span class="badge badge-teal">₹200</span></td><td style="font-weight:700;color:var(--teal-dark);">₹8.50L</td><td>3,120 / 3,600</td><td><span class="badge badge-green">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ALL USERS ══ -->
+    <div class="page" id="page-users">
+      <div class="page-header"><div><div class="page-title">All Users</div><div class="page-sub">52,480 total users across all colleges</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🎓</div><div class="stat-num">38,420</div><div class="stat-label">Students</div></div>
+        <div class="stat-card"><div class="stat-icon">📚</div><div class="stat-num">4,220</div><div class="stat-label">Teachers</div></div>
+        <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-num">9,840</div><div class="stat-label">Alumni</div></div>
+        <div class="stat-card"><div class="stat-icon">🌑</div><div class="stat-num">201</div><div class="stat-label">College Admins</div></div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="card-header" style="padding:16px 20px;"><div class="card-title">Recent Signups</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Role</th><th>College</th><th>Joined</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><div style="font-weight:600;">Sneha Patel</div></td><td><span class="badge badge-blue">Student</span></td><td>CVR College</td><td>Today, 10:30 AM</td><td><span class="badge badge-green">Active</span></td></tr>
+              <tr><td><div style="font-weight:600;">Dr. Prasad Rao</div></td><td><span class="badge badge-green" style="background:#DCFCE7;color:#166534;">Teacher</span></td><td>JNTU Hyderabad</td><td>Today, 9:15 AM</td><td><span class="badge badge-yellow">Pending</span></td></tr>
+              <tr><td><div style="font-weight:600;">Anitha Kumar</div></td><td><span class="badge badge-orange">Alumni</span></td><td>VNR VJIET</td><td>Yesterday</td><td><span class="badge badge-teal">Pending Verify</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MARKETPLACE ══ -->
+    <div class="page" id="page-marketplace">
+      <div class="page-header"><div><div class="page-title">Marketplace Overview</div><div class="page-sub">Alumni services activity across the platform</div></div></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-num">1,240</div><div class="stat-label">Total Services Completed</div></div>
+        <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-num">₹93,200</div><div class="stat-label">Total Alumni Earnings</div></div>
+        <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-num">₹18,640</div><div class="stat-label">Colyx Commission (20%)</div></div>
+        <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-num">84</div><div class="stat-label">Active Mentors</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Service Breakdown</div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">📄 Resume Reviews</span><span class="metric-val">624 sessions · ₹9,360 commission</span></div><div class="progress-track"><div class="progress-fill" style="width:50%"></div></div></div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">🎤 Mock Interviews</span><span class="metric-val">480 sessions · ₹7,200 commission</span></div><div class="progress-track"><div class="progress-fill" style="width:39%"></div></div></div>
+          <div class="metric-row"><div class="metric-header"><span class="metric-label">🔍 Interview Corrections</span><span class="metric-val">136 sessions · ₹2,040 commission</span></div><div class="progress-track"><div class="progress-fill" style="width:11%"></div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Top Mentors</div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Alumni</th><th>Sessions</th><th>Rating</th><th>Earned</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:600;">Anitha Rao</div><div class="td-sub">Google · JNTU 2018</div></td><td>48</td><td><span style="color:#F59E0B;">★ 4.9</span></td><td>₹14,400</td></tr>
+                <tr><td><div style="font-weight:600;">Rajesh Kumar</div><div class="td-sub">TCS · JNTU 2021</div></td><td>32</td><td><span style="color:#F59E0B;">★ 4.9</span></td><td>₹9,600</td></tr>
+                <tr><td><div style="font-weight:600;">Kavitha Reddy</div><div class="td-sub">Wipro · JNTU 2020</div></td><td>28</td><td><span style="color:#F59E0B;">★ 4.8</span></td><td>₹8,400</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ REVENUE ══ -->
+    <div class="page" id="page-revenue">
+      <div class="page-header"><div><div class="page-title">Revenue & ARR</div><div class="page-sub">Financial overview across all colleges</div></div><button class="btn btn-outline btn-sm" onclick="showToast('Downloading P&L...')">⬇ Download P&L</button></div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-num">₹94.2L</div><div class="stat-label">Annual Run Rate (ARR)</div><div class="stat-change up">↑ ₹4.2L this month</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-num">₹7.85L</div><div class="stat-label">Revenue This Month</div><div class="stat-change up">↑ 12% vs last month</div></div>
+        <div class="stat-card"><div class="stat-icon">🎯</div><div class="stat-num">₹18,640</div><div class="stat-label">Marketplace Commission MTD</div><div class="stat-change up">↑ 24% vs last month</div></div>
+        <div class="stat-card"><div class="stat-icon">💎</div><div class="stat-num">₹1.40L</div><div class="stat-label">Avg Revenue Per College</div><div class="stat-change neutral">Stable</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Revenue Breakdown</div>
+          <div class="rev-row"><span class="rev-label">Institutional Fees (67 colleges)</span><span class="rev-val teal">₹94.2L ARR</span></div>
+          <div class="rev-row"><span class="rev-label">Marketplace Commission (20%)</span><span class="rev-val teal">₹18,640 MTD</span></div>
+          <div class="rev-row"><span class="rev-label">GST Collected (18%)</span><span class="rev-val">₹16.96L ARR</span></div>
+          <div class="rev-row" style="font-weight:700;"><span style="font-size:14px;">Gross Revenue (incl. GST)</span><span class="rev-val" style="font-size:16px;color:var(--teal-dark);">₹1.11Cr ARR</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Monthly Revenue Trend</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Jan</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:45%"></div></div><span style="font-size:12px;font-weight:700;">₹42.3L</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Feb</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:58%"></div></div><span style="font-size:12px;font-weight:700;">₹54.6L</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--gray);width:40px;">Mar</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:76%"></div></div><span style="font-size:12px;font-weight:700;">₹71.4L</span></div>
+            <div style="display:flex;align-items:center;gap:12px;"><span style="font-size:12px;color:var(--teal-dark);font-weight:700;width:40px;">Apr</span><div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:100%"></div></div><span style="font-size:12px;font-weight:800;color:var(--teal-dark);">₹94.2L</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PAYOUTS ══ -->
+    <div class="page" id="page-payouts">
+      <div class="page-header"><div><div class="page-title">Alumni Payouts</div><div class="page-sub">3 payouts pending processing</div></div><button class="btn btn-teal btn-sm" onclick="showToast('All pending payouts processed!','teal')">✓ Process All Pending</button></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="card-header" style="padding:16px 20px;"><div><div class="card-title">Pending Payouts</div></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Alumni</th><th>College</th><th>Sessions</th><th>Gross</th><th>Commission</th><th>Net Payout</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><div style="font-weight:600;">Rajesh Kumar</div><div class="td-sub">rajesh.k@gmail.com</div></td><td>JNTU</td><td>3</td><td>₹997</td><td>₹199</td><td style="font-weight:700;color:var(--teal-dark);">₹798</td><td><button class="btn btn-teal btn-sm" onclick="showToast('₹798 paid to Rajesh Kumar!','teal')">Pay Now</button></td></tr>
+              <tr><td><div style="font-weight:600;">Anitha Rao</div><div class="td-sub">anitha.r@gmail.com</div></td><td>JNTU</td><td>8</td><td>₹2,992</td><td>₹598</td><td style="font-weight:700;color:var(--teal-dark);">₹2,394</td><td><button class="btn btn-teal btn-sm" onclick="showToast('₹2,394 paid to Anitha Rao!','teal')">Pay Now</button></td></tr>
+              <tr><td><div style="font-weight:600;">Kavitha Reddy</div><div class="td-sub">kavitha.r@gmail.com</div></td><td>VNR VJIET</td><td>4</td><td>₹1,596</td><td>₹319</td><td style="font-weight:700;color:var(--teal-dark);">₹1,277</td><td><button class="btn btn-teal btn-sm" onclick="showToast('₹1,277 paid to Kavitha Reddy!','teal')">Pay Now</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ FORECAST ══ -->
+    <div class="page" id="page-forecast">
+      <div class="page-header"><div><div class="page-title">Revenue Forecast</div><div class="page-sub">Projections based on current growth rate</div></div></div>
+      <div class="card" style="background:linear-gradient(135deg,#0D1B3E,#1A2F5A);border:none;">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;text-align:center;">
+          <div><div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">If 100 Colleges (All @ ₹200)</div><div style="font-size:32px;font-weight:800;color:white;">₹1.4Cr</div><div style="font-size:13px;color:var(--teal);">ARR · 33 more colleges</div></div>
+          <div><div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">If 200 Colleges (100 @ ₹300)</div><div style="font-size:32px;font-weight:800;color:white;">₹3.5Cr</div><div style="font-size:13px;color:var(--teal);">ARR · Year 2 target</div></div>
+          <div><div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">If 500 Colleges @ ₹300</div><div style="font-size:32px;font-weight:800;color:white;">₹8.8Cr</div><div style="font-size:13px;color:var(--teal);">ARR · Pan India scale</div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">What-if Scenarios</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;font-weight:700;">Add 10 more colleges this month</span></div><div style="display:flex;gap:20px;"><div><div style="font-size:11px;color:var(--gray);">Additional ARR</div><div style="font-size:16px;font-weight:800;color:var(--teal-dark);">+₹14L</div></div><div><div style="font-size:11px;color:var(--gray);">New total ARR</div><div style="font-size:16px;font-weight:800;">₹1.08Cr</div></div></div></div>
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:13px;font-weight:700;">Marketplace 2x growth</span></div><div style="display:flex;gap:20px;"><div><div style="font-size:11px;color:var(--gray);">Additional Monthly</div><div style="font-size:16px;font-weight:800;color:var(--teal-dark);">+₹18,640</div></div><div><div style="font-size:11px;color:var(--gray);">Additional ARR</div><div style="font-size:16px;font-weight:800;">+₹2.24L</div></div></div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Renewal Forecast</div>
+          <div style="background:var(--teal-soft);border-radius:12px;padding:14px;margin-bottom:10px;"><div style="font-size:13px;font-weight:700;color:var(--teal-dark);margin-bottom:6px;">Next 30 days renewals</div><div style="display:flex;gap:20px;"><div><div style="font-size:11px;color:var(--gray);">Colleges due</div><div style="font-size:20px;font-weight:800;color:var(--navy);">8</div></div><div><div style="font-size:11px;color:var(--gray);">Expected revenue</div><div style="font-size:20px;font-weight:800;color:var(--teal-dark);">₹11.2L</div></div><div><div style="font-size:11px;color:var(--gray);">At 94% renewal</div><div style="font-size:20px;font-weight:800;color:var(--success);">₹10.5L</div></div></div></div>
+          <div class="info-box">At current 94% renewal rate, annual renewal revenue = ₹88.5L</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUPPORT ══ -->
+    <div class="page" id="page-support">
+      <div class="page-header"><div><div class="page-title">Support Tickets</div><div class="page-sub">4 open tickets · 2 urgent</div></div><button class="btn btn-outline btn-sm" onclick="showToast('All tickets exported')">⬇ Export</button></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('sp-open','sp-tabs',this)">Open <span style="background:var(--error);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">4</span></button>
+        <button class="tab-btn" onclick="switchTab('sp-resolved','sp-tabs',this)">Resolved</button>
+      </div>
+      <div id="sp-tabs">
+        <div id="sp-open">
+          <div class="ticket-card" style="border-left:3px solid var(--error);" onclick="openModal('modal-ticket')"><div class="ticket-icon">🚨</div><div style="flex:1;"><div class="ticket-title">Payment failed — CBIT College (₹7.55L)</div><div class="ticket-meta">CBIT Hyderabad · Today 8:30 AM · High Priority · Razorpay timeout</div></div><span class="badge badge-red">Urgent</span></div>
+          <div class="ticket-card" style="border-left:3px solid var(--error);" onclick="openModal('modal-ticket')"><div class="ticket-icon">🔐</div><div style="flex:1;"><div class="ticket-title">OTP not received on Airtel SIM — 3 users</div><div class="ticket-meta">Multiple colleges · Today · High Priority · MSG91 issue</div></div><span class="badge badge-red">Urgent</span></div>
+          <div class="ticket-card" onclick="openModal('modal-ticket')"><div class="ticket-icon">📄</div><div style="flex:1;"><div class="ticket-title">Alumni photo upload timing out</div><div class="ticket-meta">JNTU College · Yesterday · Medium Priority · S3 timeout</div></div><span class="badge badge-yellow">Medium</span></div>
+          <div class="ticket-card" onclick="openModal('modal-ticket')"><div class="ticket-icon">❓</div><div style="flex:1;"><div class="ticket-title">HOD not able to see all department students</div><div class="ticket-meta">Osmania University · 2 days ago · Low Priority</div></div><span class="badge badge-gray">Low</span></div>
+        </div>
+        <div id="sp-resolved" style="display:none;">
+          <div class="ticket-card" style="opacity:0.6;"><div class="ticket-icon">✅</div><div style="flex:1;"><div class="ticket-title">Invoice not generating after payment</div><div class="ticket-meta">Resolved Apr 12 · JNTU · PDF generation bug fixed</div></div><span class="badge badge-green">Resolved</span></div>
+          <div class="ticket-card" style="opacity:0.6;"><div class="ticket-icon">✅</div><div style="flex:1;"><div class="ticket-title">Alumni conversion list not showing all students</div><div class="ticket-meta">Resolved Apr 10 · VNR VJIET · Query bug fixed</div></div><span class="badge badge-green">Resolved</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MODERATION ══ -->
+    <div class="page" id="page-moderation">
+      <div class="page-header"><div><div class="page-title">Content Moderation</div><div class="page-sub">Review flagged content before it goes public</div></div></div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('mod-test','mod-tabs',this)">Testimonials <span style="background:var(--warning);color:white;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px;">2</span></button>
+        <button class="tab-btn" onclick="switchTab('mod-reviews','mod-tabs',this)">Reviews</button>
+        <button class="tab-btn" onclick="switchTab('mod-stories','mod-tabs',this)">Alumni Stories</button>
+      </div>
+      <div id="mod-tabs">
+        <div id="mod-test">
+          <div class="card">
+            <div style="background:var(--cloud);border-radius:12px;padding:16px;margin-bottom:12px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><div style="font-size:13px;font-weight:700;">Testimonial — CVR College</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Submitted by: Ravi Kumar (Student · CSE 2nd Year)</div></div><span class="badge badge-yellow">Pending Review</span></div>
+              <div style="font-size:13px;color:var(--navy);line-height:1.7;font-style:italic;margin-bottom:12px;">"Good college overall. Infrastructure is decent. Placement cell needs improvement but faculty is supportive."</div>
+              <div style="display:flex;gap:8px;"><button class="btn btn-teal btn-sm" onclick="showToast('Testimonial approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm" onclick="showToast('Testimonial rejected')">✗ Reject</button><button class="btn btn-outline btn-sm">Flag for Review</button></div>
+            </div>
+            <div style="background:var(--cloud);border-radius:12px;padding:16px;">
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div><div style="font-size:13px;font-weight:700;">Testimonial — JNTU</div><div style="font-size:11px;color:var(--gray);font-family:'Inter',sans-serif;">Submitted by: Priya Sharma (Alumni · CSE 2021)</div></div><span class="badge badge-yellow">Pending Review</span></div>
+              <div style="font-size:13px;color:var(--navy);line-height:1.7;font-style:italic;margin-bottom:12px;">"JNTU gave me the foundation I needed. Faculty was excellent and placement support was great."</div>
+              <div style="display:flex;gap:8px;"><button class="btn btn-teal btn-sm" onclick="showToast('Testimonial approved!','teal')">✓ Approve</button><button class="btn btn-danger btn-sm">✗ Reject</button></div>
+            </div>
+          </div>
+        </div>
+        <div id="mod-reviews" style="display:none;"><div class="card"><div style="text-align:center;padding:32px;color:var(--gray);font-size:13px;font-family:'Inter',sans-serif;">No service reviews pending moderation. All clean! ✅</div></div></div>
+        <div id="mod-stories" style="display:none;"><div class="card"><div style="text-align:center;padding:32px;color:var(--gray);font-size:13px;font-family:'Inter',sans-serif;">No alumni stories pending moderation.</div></div></div>
+      </div>
+    </div>
+
+    <!-- ══ ANNOUNCEMENTS ══ -->
+    <div class="page" id="page-announcements">
+      <div class="page-header"><div><div class="page-title">Platform Announcements</div><div class="page-sub">Send announcements to all colleges, all users</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Send Platform Announcement</div>
+          <div class="form-group"><label class="form-label">Send To</label>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;">
+              <div id="ann-all" style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--teal);background:var(--teal-soft);color:var(--teal-dark);font-size:12px;font-weight:600;cursor:pointer;" onclick="toggleAnn(this)">All Users</div>
+              <div style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--gray-border);background:white;color:var(--gray);font-size:12px;font-weight:600;cursor:pointer;" onclick="toggleAnn(this)">College Admins Only</div>
+              <div style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--gray-border);background:white;color:var(--gray);font-size:12px;font-weight:600;cursor:pointer;" onclick="toggleAnn(this)">Alumni Only</div>
+              <div style="padding:7px 14px;border-radius:8px;border:1.5px solid var(--gray-border);background:white;color:var(--gray);font-size:12px;font-weight:600;cursor:pointer;" onclick="toggleAnn(this)">Students Only</div>
+            </div>
+          </div>
+          <div class="form-group"><label class="form-label">Title *</label><input class="form-input" type="text" placeholder="e.g. New Feature: Batch Reunion Organizer" id="ann-title"></div>
+          <div class="form-group"><label class="form-label">Message *</label><textarea class="form-textarea" placeholder="Announcement message..." id="ann-msg"></textarea></div>
+          <div class="form-group"><label class="form-label">Type</label><select class="form-select"><option>📢 General Announcement</option><option>🚀 New Feature</option><option>🛠️ Maintenance Notice</option><option>🎉 Milestone Celebration</option></select></div>
+          <button class="btn btn-navy" style="width:100%;" onclick="sendAnnouncement()">📢 Send to Platform</button>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Recent Announcements</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:700;">🚀 New Feature: Availability Calendar</span><span class="badge badge-teal">All Users</span></div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Alumni can now set their availability for bookings. Students see real-time slots.</div><div style="font-size:11px;color:var(--gray);margin-top:4px;">3 days ago · 52,480 recipients · 78% read</div></div>
+            <div style="background:var(--cloud);border-radius:12px;padding:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:13px;font-weight:700;">🎉 50 Colleges Milestone!</span><span class="badge badge-teal">All Users</span></div><div style="font-size:12px;color:var(--gray);font-family:'Inter',sans-serif;">Colyx crosses 50 colleges and 40,000 users. Thank you for being part of this journey!</div><div style="font-size:11px;color:var(--gray);margin-top:4px;">2 weeks ago · 48,200 recipients · 92% read</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><div><div class="page-title">Platform Settings</div></div><button class="btn btn-teal btn-sm" onclick="showToast('Settings saved!','teal')">💾 Save</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Pricing Control</div>
+          <div class="form-group"><label class="form-label">Founder's Club Rate (per student/year)</label><input class="form-input" type="text" value="₹200"></div>
+          <div class="form-group"><label class="form-label">Standard Rate (per student/year)</label><input class="form-input" type="text" value="₹300"></div>
+          <div class="form-group"><label class="form-label">Founder's Club Limit (colleges)</label><input class="form-input" type="number" value="100"></div>
+          <div class="form-group"><label class="form-label">Marketplace Commission (%)</label><input class="form-input" type="number" value="20"></div>
+          <div class="form-group"><label class="form-label">GST Rate (%)</label><input class="form-input" type="number" value="18"></div>
+          <div class="form-group"><label class="form-label">Alumni Payout Window (days)</label><input class="form-input" type="number" value="7"></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Feature Flags</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Alumni Services Marketplace</div><div style="font-size:11px;color:var(--gray);">Resume review, mock interview</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">College Public Pages</div><div style="font-size:11px;color:var(--gray);">Publicly visible college profiles</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Availability Calendar</div><div style="font-size:11px;color:var(--gray);">Alumni can set booking slots</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Pay It Forward</div><div style="font-size:11px;color:var(--gray);">Free session donation feature</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Batch Reunion Organizer</div><div style="font-size:11px;color:var(--gray);">Alumni batch reunion feature</div></div><input type="checkbox" checked style="accent-color:var(--teal);width:16px;height:16px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--cloud);border-radius:10px;"><div><div style="font-size:13px;font-weight:600;">Competitor Monitoring</div><div style="font-size:11px;color:var(--gray);">Track similar platforms</div></div><input type="checkbox" style="accent-color:var(--teal);width:16px;height:16px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-add-lead">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Add Pipeline Lead</div><div class="modal-close" onclick="closeModal('modal-add-lead')">×</div></div>
+    <div class="form-group"><label class="form-label">College Name *</label><input class="form-input" type="text" placeholder="College name"></div>
+    <div class="form-group"><label class="form-label">City *</label><input class="form-input" type="text" placeholder="City"></div>
+    <div class="form-group"><label class="form-label">Estimated Intake</label><input class="form-input" type="number" placeholder="e.g. 2400"></div>
+    <div class="form-group"><label class="form-label">Contact Person</label><input class="form-input" type="text" placeholder="Principal / Placement Officer"></div>
+    <div class="form-group"><label class="form-label">Mobile</label><input class="form-input" type="tel" placeholder="+91 XXXXX XXXXX"></div>
+    <div class="form-group"><label class="form-label">Pipeline Stage</label><select class="form-select"><option>Contacted</option><option>Demo Scheduled</option><option>Demo Done</option><option>Payment Pending</option></select></div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" style="min-height:70px;" placeholder="Any notes about this lead..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-lead')">Cancel</button>
+      <button class="btn btn-navy" onclick="closeModal('modal-add-lead');showToast('Lead added to pipeline!','teal')">Add to Pipeline</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ticket">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Support Ticket</div><div class="modal-close" onclick="closeModal('modal-ticket')">×</div></div>
+    <div style="background:#FEE2E2;border-radius:12px;padding:14px;margin-bottom:16px;"><div style="font-size:14px;font-weight:700;color:#991B1B;">Payment failed — CBIT College (₹7.55L)</div><div style="font-size:12px;color:#991B1B;margin-top:4px;">Today 8:30 AM · Razorpay timeout · High Priority</div></div>
+    <div class="form-group"><label class="form-label">Resolution Notes</label><textarea class="form-textarea" placeholder="What was the issue and how was it resolved..."></textarea></div>
+    <div class="form-group"><label class="form-label">Assign To</label><select class="form-select"><option>Myself (Krishna)</option><option>Tech Team</option><option>Finance Team</option></select></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-ticket')">Cancel</button>
+      <button class="btn btn-teal" onclick="closeModal('modal-ticket');showToast('Ticket resolved!','teal')">Mark Resolved</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) { document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); el.classList.add('active'); }
+  const titles = { overview:'Overview', health:'Platform Health', pipeline:'Onboarding Pipeline', founders:"Founder's Club", growth:'Growth Metrics', colleges:'All Colleges', users:'All Users', marketplace:'Marketplace', revenue:'Revenue & ARR', payouts:'Alumni Payouts', forecast:'Revenue Forecast', support:'Support Tickets', moderation:'Content Moderation', announcements:'Announcements', settings:'Platform Settings' };
+  document.getElementById('header-title').textContent = titles[id] || id;
+  closeSidebar();
+}
+function switchTab(showId, containerId, btn) {
+  document.getElementById(containerId).querySelectorAll(':scope > div').forEach(d => d.style.display='none');
+  document.getElementById(showId).style.display = 'block';
+  btn.closest('.tab-bar').querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleAnn(el) {
+  const isOn = el.style.background.includes('230');
+  if (isOn) { el.style.background='white'; el.style.borderColor='var(--gray-border)'; el.style.color='var(--gray)'; }
+  else { el.style.background='var(--teal-soft)'; el.style.borderColor='var(--teal)'; el.style.color='var(--teal-dark)'; }
+}
+function sendAnnouncement() {
+  const t = document.getElementById('ann-title').value;
+  const m = document.getElementById('ann-msg').value;
+  if (!t || !m) { showToast('Please fill title and message'); return; }
+  showToast('Announcement sent to platform!', 'teal');
+  document.getElementById('ann-title').value='';
+  document.getElementById('ann-msg').value='';
+}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', function(e) { if(e.target===this) this.classList.remove('open'); }));
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('open'); }
+function goHome() { window.location.href='colyx_landing_page.html'; }
+function showToast(msg, type='') { const t=document.getElementById('toast'); t.textContent=msg; t.className='toast'+(type?' '+type:'')+' show'; setTimeout(()=>t.classList.remove('show'),3000); }
+</script>
+</body>
+</html>
